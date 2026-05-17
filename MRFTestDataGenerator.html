@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MRF Test Data Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-blue-50:#e6f1fb;--c-blue-100:#b5d4f4;--c-blue-400:#378add;--c-blue-600:#185fa5;--c-blue-800:#0c447c;
+  --c-green-50:#eaf3de;--c-green-600:#3b6d11;--c-green-800:#27500a;
+  --c-red-50:#fcebeb;--c-red-100:#f7c1c1;--c-red-600:#a32d2d;--c-red-800:#791f1f;
+  --c-amber-50:#faeeda;--c-amber-100:#fac775;--c-amber-600:#854f0b;
+  --c-gray-50:#f1efe8;--c-gray-100:#d3d1c7;--c-gray-400:#888780;--c-gray-600:#5f5e5a;--c-gray-800:#444441;
+  --c-purple-50:#eeedfe;--c-purple-100:#cecbf6;--c-purple-400:#7f77dd;--c-purple-600:#534ab7;--c-purple-800:#3c3489;
+  --radius:8px;--radius-lg:12px;--radius-sm:5px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;color:#1a1a1a;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* ── layout ── */
+.page{max-width:1040px;margin:0 auto;padding:28px 20px 60px}
+
+/* ── top bar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;padding-bottom:20px;border-bottom:1px solid #e0e0e0}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:36px;height:36px;background:var(--c-blue-600);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-mark svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand-name{font-size:15px;font-weight:600;color:#1a1a1a;letter-spacing:-.2px}
+.brand-sub{font-size:12px;color:#666;margin-top:2px}
+.spec-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--c-blue-800);background:var(--c-blue-50);border:1px solid var(--c-blue-100);padding:6px 14px;border-radius:20px;text-decoration:none;transition:background .15s}
+.spec-link:hover{background:var(--c-blue-100)}
+.spec-link svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── file selector tabs ── */
+.file-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.fs-btn{display:flex;align-items:center;gap:10px;padding:13px 16px;background:#fff;border:1px solid #e0e0e0;border-radius:var(--radius-lg);cursor:pointer;text-align:left;transition:border-color .15s,background .15s}
+.fs-btn:hover{border-color:var(--c-blue-400);background:var(--c-blue-50)}
+.fs-btn.active{border-color:var(--c-blue-600);background:var(--c-blue-50);box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.fs-ico{width:34px;height:34px;border-radius:var(--radius-sm);background:#f5f5f5;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.fs-ico svg{width:16px;height:16px;stroke:#888;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.fs-btn.active .fs-ico{background:var(--c-blue-600);border-color:var(--c-blue-600)}
+.fs-btn.active .fs-ico svg{stroke:#fff}
+.fs-info{flex:1;min-width:0}
+.fs-label{font-size:13px;font-weight:500;color:#333}
+.fs-btn.active .fs-label{color:var(--c-blue-800);font-weight:600}
+.fs-desc{font-size:11px;color:#888;margin-top:1px}
+.fs-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:#f0f0f0;color:#888;border:1px solid #e0e0e0;white-space:nowrap;flex-shrink:0}
+.fs-badge.ok{background:var(--c-green-50);color:var(--c-green-600);border-color:#c0dd97}
+.fpanel{display:none}.fpanel.active{display:block}
+
+/* ── cards ── */
+.card{background:#fff;border:1px solid #e0e0e0;border-radius:var(--radius-lg);margin-bottom:14px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:12px 18px;background:#fafafa;border-bottom:1px solid #e0e0e0}
+.card-head-ico{width:26px;height:26px;border-radius:var(--radius-sm);background:var(--c-blue-50);border:1px solid var(--c-blue-100);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-head-ico svg{width:13px;height:13px;stroke:var(--c-blue-600);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.card-head-title{font-size:13px;font-weight:600;color:#1a1a1a}
+.card-head-tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;background:#f0f0f0;color:#666;border:1px solid #e0e0e0;margin-left:4px}
+.card-head-note{font-size:11px;color:#999;margin-left:auto}
+.card-body{padding:18px}
+
+/* ── grids ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.mt{margin-top:12px}
+.sep{border:none;border-top:1px solid #ebebeb;margin:14px 0}
+
+/* ── form fields ── */
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;font-weight:500;color:#444}
+.req{color:#c0392b}
+.f input,.f select,.f textarea{
+  border:1px solid #d0d0d0;border-radius:var(--radius-sm);
+  padding:7px 10px;font-size:13px;color:#1a1a1a;background:#fff;
+  outline:none;font-family:inherit;line-height:1.4;
+  transition:border-color .15s,box-shadow .15s;
+}
+.f input:hover,.f select:hover{border-color:#aaa}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--c-blue-400);box-shadow:0 0 0 3px rgba(55,138,221,.12)}
+.f input:disabled{background:#f5f5f5;color:#aaa;border-color:#e0e0e0;cursor:not-allowed}
+.f textarea{resize:vertical;min-height:52px;line-height:1.5}
+.f-hint{font-size:11px;color:#999;margin-top:2px;line-height:1.4}
+.f-warn{font-size:11px;color:var(--c-amber-600);margin-top:2px}
+.cond-tag{font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle}
+.cond-req{background:var(--c-red-50);color:var(--c-red-600);border:1px solid var(--c-red-100)}
+.cond-opt{background:#f5f5f5;color:#888;border:1px solid #e0e0e0}
+
+/* ── dividers ── */
+.sec-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#999;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:1px;background:#ebebeb}
+.sec-label:first-child{margin-top:0}
+
+/* ── sub blocks ── */
+.blk{border:1px solid #e8e8e8;border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;background:#fafafa;position:relative}
+.blk-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.blk-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--c-blue-600);color:#fff}
+.blk-title{font-size:12px;font-weight:500;color:#333}
+.rm-btn{position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:3px;background:none;border:1px solid var(--c-red-100);color:var(--c-red-600);border-radius:var(--radius-sm);padding:3px 9px;font-size:11px;font-weight:500;cursor:pointer;transition:background .15s}
+.rm-btn:hover{background:var(--c-red-50)}
+.add-sub{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border:1px dashed #ccc;background:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:#888;cursor:pointer;margin-top:8px;transition:all .15s}
+.add-sub:hover{border-color:var(--c-blue-400);color:var(--c-blue-600);background:var(--c-blue-50);border-style:solid}
+.add-sub svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── record tabs ── */
+.rtab-bar{display:flex;align-items:center;overflow-x:auto;border-bottom:1px solid #e0e0e0;margin-bottom:14px}
+.rtab{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:12px;font-weight:500;color:#888;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s}
+.rtab:hover{color:#333}
+.rtab.active{color:var(--c-blue-600);border-bottom-color:var(--c-blue-600);font-weight:600}
+.rtab-num{width:18px;height:18px;border-radius:50%;background:#f0f0f0;border:1px solid #ddd;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;color:#888;flex-shrink:0;transition:all .15s}
+.rtab.active .rtab-num{background:var(--c-blue-600);border-color:var(--c-blue-600);color:#fff}
+.rtab-close{font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;padding:0 2px;border-radius:3px;transition:color .15s}
+.rtab-close:hover{color:#c0392b}
+.rtab-add{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;font-size:12px;font-weight:500;color:var(--c-blue-600);background:var(--c-blue-50);border:1px solid var(--c-blue-100);border-radius:14px;cursor:pointer;margin-left:8px;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.rtab-add:hover{background:var(--c-blue-100)}
+.rtab-add svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.rpanel{display:none}.rpanel.active{display:block}
+.rec-body{border:1px solid var(--c-blue-100);background:#fafcff;border-radius:var(--radius);padding:16px}
+
+/* ── action bar ── */
+.abar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;background:#fff;border:1px solid #e0e0e0;border-radius:var(--radius-lg);margin-top:4px}
+.btn-gen{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--c-blue-600);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-gen:hover{background:var(--c-blue-800)}
+.btn-gen svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-dl{display:none;align-items:center;gap:6px;padding:9px 16px;background:var(--c-green-600);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-dl:hover{background:var(--c-green-800)}
+.btn-dl svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.btn-sec{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;background:#fff;color:#555;border:1px solid #d0d0d0;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-sec:hover{background:#f5f5f5;border-color:#aaa}
+.btn-sec svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── error ── */
+.err-box{display:none;margin-top:10px;padding:10px 12px 10px 38px;background:var(--c-red-50);border:1px solid var(--c-red-100);border-radius:var(--radius);font-size:13px;color:var(--c-red-800);position:relative;line-height:1.5}
+.err-box::before{content:'';position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:2px solid var(--c-red-600);border-radius:50%}
+.err-box::after{content:'!';position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--c-red-600)}
+
+/* ── preview ── */
+.prev-wrap{display:none;margin-top:12px;border-radius:var(--radius);overflow:hidden;border:1px solid #2d3748}
+.prev-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#2d3748}
+.prev-bar-left{display:flex;align-items:center;gap:8px}
+.prev-dots{display:flex;gap:5px}
+.prev-dot{width:10px;height:10px;border-radius:50%}
+.prev-bar span{font-size:11px;color:#a0aec0;font-family:monospace}
+.prev-bar button{font-size:11px;color:#a0aec0;background:none;border:1px solid #4a5568;padding:3px 10px;border-radius:4px;cursor:pointer;transition:all .15s}
+.prev-bar button:hover{background:#4a5568;color:#e2e8f0}
+.prev-code{font-family:'Courier New',monospace;font-size:11px;line-height:1.7;background:#1a202c;color:#e2e8f0;padding:14px;max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+
+/* ── validation ── */
+.val-wrap{display:none;margin-top:12px;border-radius:var(--radius);overflow:hidden}
+.val-head{padding:10px 14px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.val-head svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.val-head.pass{background:var(--c-green-50);color:var(--c-green-800);border:1px solid #c0dd97}
+.val-head.fail{background:var(--c-red-50);color:var(--c-red-800);border:1px solid var(--c-red-100)}
+.val-head.warn{background:var(--c-amber-50);color:var(--c-amber-600);border:1px solid var(--c-amber-100)}
+.val-body{background:#fff;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 var(--radius) var(--radius)}
+.val-stats{display:flex;gap:18px;padding:8px 14px;border-bottom:1px solid #ebebeb;background:#fafafa;font-size:12px}
+.val-stats span{font-weight:500}
+.vtbl{width:100%;border-collapse:collapse;font-size:12px}
+.vtbl th{padding:7px 12px;background:#fafafa;color:#888;font-weight:600;text-align:left;border-bottom:1px solid #ebebeb;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.vtbl td{padding:7px 12px;border-bottom:1px solid #f5f5f5;vertical-align:top;color:#444}
+.vtbl tr:last-child td{border-bottom:none}
+.vtbl tr.fail-row{background:#fffafa}
+.vbadge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;white-space:nowrap}
+.vbadge.p{background:var(--c-green-50);color:var(--c-green-600);border:1px solid #c0dd97}
+.vbadge.f{background:var(--c-red-50);color:var(--c-red-600);border:1px solid var(--c-red-100)}
+.vpath{font-family:monospace;font-size:11px;color:var(--c-blue-800);background:var(--c-blue-50);padding:1px 5px;border-radius:3px}
+.val-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#fafafa;border-bottom:1px solid #ebebeb;flex-wrap:wrap;gap:8px}
+.val-pills{display:flex;gap:6px;flex-wrap:wrap}
+.vpill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.vpill.err{background:var(--c-red-50);color:var(--c-red-800);border:1px solid var(--c-red-100)}
+.vpill.ok{background:var(--c-green-50);color:var(--c-green-800);border:1px solid #c0dd97}
+.vpill.tot{background:#f5f5f5;color:#777;border:1px solid #e0e0e0}
+.val-toggle{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border:1px solid #d0d0d0;background:#fff;border-radius:10px;font-size:11px;font-weight:500;color:#666;cursor:pointer;transition:all .15s;white-space:nowrap}
+.val-toggle:hover{background:#f5f5f5}
+.val-toggle svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.val-grp{border-bottom:1px solid #ebebeb}
+.val-grp:last-child{border-bottom:none}
+.val-grp-hdr{display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fafafa;cursor:pointer;user-select:none;transition:background .15s}
+.val-grp-hdr:hover{background:#f2f2f2}
+.val-grp-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;flex:1}
+.val-grp-cnt{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.val-grp-cnt.ok{background:var(--c-green-50);color:var(--c-green-600);border:1px solid #c0dd97}
+.val-grp-cnt.err{background:var(--c-red-50);color:var(--c-red-600);border:1px solid var(--c-red-100)}
+.val-chev svg{width:13px;height:13px;stroke:#bbb;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;display:block}
+.val-chev.open svg{transform:rotate(180deg)}
+.val-grp-body{display:none}
+.val-grp-body.open{display:block}
+.val-fail-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #fdeaea;background:#fff9f9}
+.val-fail-row:last-child{border-bottom:none}
+.val-fi{width:18px;height:18px;background:var(--c-red-50);border:1px solid var(--c-red-100);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;font-weight:700;color:var(--c-red-800)}
+.val-fb{flex:1;min-width:0}
+.val-ffield{font-family:monospace;font-size:11px;color:var(--c-blue-800);background:var(--c-blue-50);padding:2px 6px;border-radius:3px;display:inline-block;margin-bottom:3px;word-break:break-all}
+.val-fmsg{font-size:12px;color:var(--c-red-800);line-height:1.4}
+.val-pass-row{display:flex;align-items:center;padding:5px 14px;border-bottom:1px solid #f5f5f5}
+.val-pass-row:last-child{border-bottom:none}
+.val-pck{width:14px;height:14px;flex-shrink:0;color:var(--c-green-600)}
+.val-pck svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.val-pf{font-family:monospace;font-size:11px;color:#555;flex:1;padding:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.val-pv{font-size:11px;color:#aaa;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+
+/* ── TOC file zones ── */
+.toc-zone{border-radius:var(--radius);padding:14px;margin-top:12px}
+.toc-inn{background:var(--c-blue-50);border:1px solid var(--c-blue-100)}
+.toc-aa{background:var(--c-purple-50);border:1px solid var(--c-purple-100)}
+.toc-zone-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.toc-zone-hd-ico{width:26px;height:26px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toc-inn .toc-zone-hd-ico{background:var(--c-blue-600);color:#fff}
+.toc-aa .toc-zone-hd-ico{background:var(--c-purple-600);color:#fff}
+.toc-zone-hd-ico svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toc-zone-title{font-size:12px;font-weight:600}
+.toc-inn .toc-zone-title{color:var(--c-blue-800)}
+.toc-aa .toc-zone-title{color:var(--c-purple-800)}
+.toc-zone-sub{font-size:11px;color:#888}
+.toc-note{font-size:11px;padding:6px 9px;border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.5}
+.toc-inn .toc-note{background:var(--c-blue-100);color:var(--c-blue-800)}
+.toc-aa .toc-note{background:var(--c-purple-100);color:var(--c-purple-800)}
+.toc-entry{background:#fff;border:1px solid #ddd;border-radius:var(--radius-sm);padding:11px;margin-bottom:8px;position:relative}
+.toc-entry-rm{position:absolute;top:8px;right:8px;background:none;border:1px solid var(--c-red-100);color:var(--c-red-600);border-radius:var(--radius-sm);padding:2px 7px;font-size:11px;cursor:pointer;transition:background .15s}
+.toc-entry-rm:hover{background:var(--c-red-50)}
+.url-ok{font-size:11px;color:var(--c-green-600);margin-top:3px}
+.url-err{font-size:11px;color:var(--c-red-600);margin-top:3px}
+.toc-add-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;border:1px dashed #ccc;background:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:#888;cursor:pointer;margin-top:4px;width:100%;transition:all .15s}
+
+/* ── load test panel ── */
+.ltest-divider{display:flex;align-items:center;gap:0;margin:22px 0 0}
+.ltest-divider span{font-size:10px;font-weight:600;color:var(--c-purple-800);text-transform:uppercase;letter-spacing:.08em;background:var(--c-purple-50);border:1px solid var(--c-purple-100);padding:4px 12px;border-radius:20px;white-space:nowrap}
+.ltest-divider::before,.ltest-divider::after{content:'';flex:1;height:1px;background:var(--c-purple-100)}
+.ltest-divider::before{margin-right:10px}
+.ltest-divider::after{margin-left:10px}
+.ltest-panel{background:var(--c-purple-50);border:1px solid var(--c-purple-100);border-radius:var(--radius-lg);padding:18px 20px;margin-top:10px;margin-bottom:14px}
+.ltest-panel-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.ltest-ico{width:34px;height:34px;background:var(--c-purple-600);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ltest-ico svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ltest-title{font-size:13px;font-weight:600;color:var(--c-purple-800)}
+.ltest-sub{font-size:11px;color:var(--c-purple-600);margin-top:1px}
+.ltest-counts{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.cnt-btn{padding:6px 16px;border:1px solid var(--c-purple-100);background:#fff;border-radius:20px;font-size:12px;font-weight:600;color:var(--c-purple-600);cursor:pointer;transition:all .15s}
+.cnt-btn:hover{background:var(--c-purple-100);border-color:var(--c-purple-400)}
+.cnt-btn.sel{background:var(--c-purple-600);border-color:var(--c-purple-600);color:#fff}
+.cnt-custom{display:flex;align-items:center;gap:6px}
+.cnt-custom span{font-size:11px;color:var(--c-purple-800);font-weight:600}
+.cnt-custom input{width:130px;padding:6px 9px;border:1px solid var(--c-purple-100);border-radius:var(--radius-sm);font-size:12px;color:var(--c-purple-800);background:#fff;outline:none;transition:border-color .15s}
+.cnt-custom input:focus{border-color:var(--c-purple-400);box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+.ltest-opts{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.ltest-opt{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--c-purple-800);cursor:pointer;font-weight:500}
+.ltest-opt input[type=checkbox]{width:14px;height:14px;accent-color:var(--c-purple-600);cursor:pointer}
+.ltest-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-ltest{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--c-purple-600);color:#fff;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-ltest:hover{background:var(--c-purple-800)}
+.btn-ltest svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ltest-limit{font-size:12px;padding:8px 11px;border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.5;display:none}
+.ltest-limit.warn{display:block;background:var(--c-amber-50);border:1px solid var(--c-amber-100);color:var(--c-amber-600)}
+.ltest-limit.danger{display:block;background:var(--c-red-50);border:1px solid var(--c-red-100);color:var(--c-red-800)}
+.ltest-progress{display:none;align-items:center;gap:10px;font-size:12px;color:var(--c-purple-600);margin-top:10px}
+.ltest-progress.on{display:flex}
+.prog-bar-wrap{flex:1;height:5px;background:var(--c-purple-100);border-radius:3px;overflow:hidden}
+.prog-bar{height:100%;background:var(--c-purple-600);border-radius:3px;transition:width .2s;width:0%}
+.ltest-stat{font-size:12px;font-weight:500;color:var(--c-purple-800);margin-top:8px;display:none;line-height:1.5}
+.ltest-stat.on{display:block}
+
+/* ── toast ── */
+.toast{position:fixed;bottom:22px;right:22px;background:#2d3748;color:#f7fafc;padding:9px 16px;border-radius:var(--radius);font-size:12px;font-weight:500;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;z-index:9999}
+.toast.on{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">MRF Test Data Generator</div>
+      <div class="brand-sub">CMS Transparency in Coverage &middot; Schema v2.0.0 &middot; Defaults pre-filled</div>
+    </div>
+  </div>
+  <a href="https://github.com/CMSgov/price-transparency-guide" target="_blank" class="spec-link">
+    <svg viewBox="0 0 24 24"><path d="M14 3h7v7M10 14 21 3M9 7H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>
+    CMS Official Spec
+  </a>
+</div>
+
+<div class="file-selector">
+  <button class="fs-btn active" onclick="switchF('inn',this)">
+    <div class="fs-ico"><svg viewBox="0 0 24 24"><path d="M8 7h10M8 11h6M8 15h4M4 20V4h16v16z"/></svg></div>
+    <div class="fs-info"><div class="fs-label">In-Network Rates</div><div class="fs-desc">in_network[ ] entries</div></div>
+    <span class="fs-badge" id="fcnt-inn">&ndash;</span>
+  </button>
+  <button class="fs-btn" onclick="switchF('aa',this)">
+    <div class="fs-ico"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg></div>
+    <div class="fs-info"><div class="fs-label">Allowed Amounts</div><div class="fs-desc">out_of_network[ ] entries</div></div>
+    <span class="fs-badge" id="fcnt-aa">&ndash;</span>
+  </button>
+  <button class="fs-btn" onclick="switchF('toc',this)">
+    <div class="fs-ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h8"/></svg></div>
+    <div class="fs-info"><div class="fs-label">Table of Contents</div><div class="fs-desc">reporting_structure[ ] entries</div></div>
+    <span class="fs-badge" id="fcnt-toc">&ndash;</span>
+  </button>
+</div>
+
+<!-- ═══════════════════ IN-NETWORK ═══════════════════ -->
+<div class="fpanel active" id="fp-inn">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></div>
+      <div class="card-head-title">File Header</div>
+      <span class="card-head-tag">reporting entity &amp; plan</span>
+      <div class="card-head-note">Applies to the entire file</div>
+    </div>
+    <div class="card-body">
+      <div class="g4">
+        <div class="f"><label>Reporting entity name <span class="req">*</span></label><input id="ih-ename" value="AMPS"/><span class="f-hint">Legal name of the publishing entity</span></div>
+        <div class="f"><label>Reporting entity type <span class="req">*</span></label><select id="ih-etype"><option>third-party administrator</option><option>health plan</option><option>issuer</option><option>health insurance issuer</option></select></div>
+        <div class="f"><label>Last updated on <span class="req">*</span></label><input id="ih-date" type="date" value="2025-10-30"/><span class="f-hint">Monthly refresh required by CMS</span></div>
+        <div class="f"><label>Version</label><input id="ih-ver" value="2.0.0"/></div>
+      </div>
+      <hr class="sep"/>
+      <div class="g4">
+        <div class="f"><label>Plan name</label><input id="ih-pname" value="AMPSNEXT"/></div>
+        <div class="f"><label>Plan ID type</label><select id="ih-idtype" onchange="toggleSponsor('ih')"><option value="ein">ein</option><option value="hios">hios</option></select></div>
+        <div class="f"><label>Plan ID</label><input id="ih-planid"/></div>
+        <div class="f"><label id="ih-slbl">Plan sponsor name <span class="req">*</span><span class="cond-tag cond-req" style="margin-left:4px">required for ein</span></label><input id="ih-sponsor" value="MRF"/><span class="f-hint" id="ih-shint" style="color:var(--danger)">Required because Plan ID type is <b>ein</b></span></div>
+      </div>
+      <div class="g3 mt">
+        <div class="f"><label>Issuer name</label><input id="ih-issuer" value="karthic"/></div>
+        <div class="f"><label>Plan market type</label><select id="ih-mkt"><option value="group">group</option><option value="individual" selected>individual</option></select></div>
+        <div class="f"><label>Negotiation arrangement</label><select id="ih-negarr"><option value="ffs">ffs — Fee for Service</option><option value="bundle">bundle</option><option value="capitation">capitation</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div class="card-head-title">Provider References</div>
+      <span class="card-head-tag">shared across all records</span>
+      <div class="card-head-note">provider_group_id auto-assigned 1, 2, 3&hellip;</div>
+    </div>
+    <div class="card-body">
+      <div id="inn-provs"></div>
+      <button class="add-sub" onclick="addProv()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add provider reference</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+      <div class="card-head-title">in_network[ ] records</div>
+      <span class="card-head-tag">billing codes</span>
+      <div class="card-head-note">Each tab = one object in the array</div>
+    </div>
+    <div class="card-body">
+      <div class="rtab-bar" id="inn-bar"></div>
+      <div id="inn-recs"></div>
+    </div>
+  </div>
+
+    <div class="abar">
+    <button class="btn-gen" onclick="genINN()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Generate JSON</button>
+    <button class="btn-dl" id="dl-inn" onclick="dlFile('inn')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
+    <button class="btn-sec" onclick="rstINN()"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+  </div>
+  <div class="err-box" id="err-inn"></div>
+    <div class="prev-wrap" id="pw-inn">
+    <div class="prev-bar">
+      <div class="prev-bar-left">
+        <div class="prev-dots"><div class="prev-dot" style="background:#ff5f57"></div><div class="prev-dot" style="background:#ffbd2e"></div><div class="prev-dot" style="background:#28ca41"></div></div>
+        <span id="pf-inn">output.json</span>
+      </div>
+      <button onclick="copyJ('inn')">Copy JSON</button>
+    </div>
+    <pre class="prev-code" id="pc-inn"></pre>
+  </div>
+    <div class="val-wrap" id="vw-inn">
+    <div class="val-head" id="vh-inn"></div>
+    <div class="val-body">
+      <div class="val-stats" id="vs-inn"></div>
+      <div class="val-toolbar" id="vt-inn"></div><div id="vb-inn"></div>
+    </div>
+  </div>
+
+  <div class="ltest-divider"><span>&#9889; Load Test — random data generator</span></div>
+
+  <div class="ltest-panel" id="ltest-inn">
+    <div class="ltest-panel-hdr">
+      <div class="ltest-ico"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 7h10M7 11h7"/></svg></div>
+      <div>
+        <div class="ltest-title">Load Test — In-Network Records</div>
+        <div class="ltest-sub">Generate 50–10,000 random valid in_network[ ] entries &nbsp;&middot;&nbsp; max 10,000 records per file</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#5b21b6;margin-bottom:10px;font-weight:500">Select record count:</div>
+    <div class="ltest-counts">
+      <button class="cnt-btn sel" onclick="selCount('inn',50,this)">50</button>
+      <button class="cnt-btn" onclick="selCount('inn',100,this)">100</button>
+      <button class="cnt-btn" onclick="selCount('inn',200,this)">200</button>
+      <button class="cnt-btn" onclick="selCount('inn',300,this)">300</button>
+      <div class="cnt-custom"><span style="font-size:12px;color:#5b21b6;font-weight:600">Custom:</span><input id="inn-custom-cnt" type="number" min="1" max="10000" value="" placeholder="e.g. 500 (max 10,000)" oninput="selCount('inn',0,null)"/></div>
+    </div>
+    <div class="ltest-opts">
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-ctypes" checked/> Mix billing code types (CPT, HCPCS, MS-DRG, etc.)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-bclass" checked/> Mix billing classes (professional / institutional / both)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-setting" checked/> Mix settings (inpatient / outpatient / both)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-multi-prov" checked/> Use multiple provider references</label>
+    </div>
+    <div class="ltest-limit" id="inn-limit-msg"></div>
+    <div class="ltest-actions">
+      <button class="btn-ltest" onclick="ltestGenINN()"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate &amp; Download</button>
+      <span style="font-size:12px;color:#6d28d9" id="inn-ltest-note">Each record ~700 bytes &nbsp;&middot;&nbsp; 10,000 records &asymp; 7 MB &nbsp;&middot;&nbsp; Do not exceed 10,000 records</span>
+    </div>
+    <div class="ltest-progress" id="inn-prog"><div class="prog-bar-wrap"><div class="prog-bar" id="inn-prog-bar"></div></div><span id="inn-prog-txt">Generating...</span></div>
+    <div class="ltest-stat" id="inn-ltest-stat"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ ALLOWED AMOUNTS ═══════════════════ -->
+<div class="fpanel" id="fp-aa">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></div>
+      <div class="card-head-title">File Header</div>
+      <span class="card-head-tag">reporting entity &amp; plan</span>
+      <div class="card-head-note">Applies to the entire file</div>
+    </div>
+    <div class="card-body">
+      <div class="g4">
+        <div class="f"><label>Reporting entity name <span class="req">*</span></label><input id="ah-ename" value="AMPS"/></div>
+        <div class="f"><label>Reporting entity type <span class="req">*</span></label><select id="ah-etype"><option>third-party administrator</option><option>health plan</option><option>issuer</option><option>health insurance issuer</option></select></div>
+        <div class="f"><label>Last updated on <span class="req">*</span></label><input id="ah-date" type="date"/></div>
+        <div class="f"><label>Version</label><input id="ah-ver" value="2.0.0"/></div>
+      </div>
+      <hr class="sep"/>
+      <div class="g4">
+        <div class="f"><label>Plan name</label><input id="ah-pname" value="AMPSNEXT"/></div>
+        <div class="f"><label>Plan ID type</label><select id="ah-idtype" onchange="toggleSponsor('ah')"><option value="ein">ein</option><option value="hios">hios</option></select></div>
+        <div class="f"><label>Plan ID</label><input id="ah-planid"/></div>
+        <div class="f"><label id="ah-slbl">Plan sponsor name <span class="req">*</span><span class="cond-tag cond-req" style="margin-left:4px">required for ein</span></label><input id="ah-sponsor" value="MRF"/><span class="f-hint" id="ah-shint" style="color:var(--danger)">Required because Plan ID type is <b>ein</b></span></div>
+      </div>
+      <div class="g2 mt">
+        <div class="f"><label>Issuer name</label><input id="ah-issuer" value="karthic"/></div>
+        <div class="f"><label>Plan market type</label><select id="ah-mkt"><option value="group">group</option><option value="individual" selected>individual</option></select></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div>
+      <div class="card-head-title">out_of_network[ ] records</div>
+      <span class="card-head-tag">OON services</span>
+      <div class="card-head-note">Each tab = one object in the array</div>
+    </div>
+    <div class="card-body">
+      <div class="rtab-bar" id="aa-bar"></div>
+      <div id="aa-recs"></div>
+    </div>
+  </div>
+
+    <div class="abar">
+    <button class="btn-gen" onclick="genAA()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Generate JSON</button>
+    <button class="btn-dl" id="dl-aa" onclick="dlFile('aa')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
+    <button class="btn-sec" onclick="rstAA()"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+  </div>
+  <div class="err-box" id="err-aa"></div>
+    <div class="prev-wrap" id="pw-aa">
+    <div class="prev-bar">
+      <div class="prev-bar-left">
+        <div class="prev-dots"><div class="prev-dot" style="background:#ff5f57"></div><div class="prev-dot" style="background:#ffbd2e"></div><div class="prev-dot" style="background:#28ca41"></div></div>
+        <span id="pf-aa">output.json</span>
+      </div>
+      <button onclick="copyJ('aa')">Copy JSON</button>
+    </div>
+    <pre class="prev-code" id="pc-aa"></pre>
+  </div>
+    <div class="val-wrap" id="vw-aa">
+    <div class="val-head" id="vh-aa"></div>
+    <div class="val-body">
+      <div class="val-stats" id="vs-aa"></div>
+      <div class="val-toolbar" id="vt-aa"></div><div id="vb-aa"></div>
+    </div>
+  </div>
+
+  <div class="ltest-divider"><span>&#9889; Load Test — random data generator</span></div>
+
+  <div class="ltest-panel" id="ltest-aa">
+    <div class="ltest-panel-hdr">
+      <div class="ltest-ico"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 7h10M7 11h7"/></svg></div>
+      <div>
+        <div class="ltest-title">Load Test — Allowed Amount Records</div>
+        <div class="ltest-sub">Generate 50–10,000 random valid out_of_network[ ] entries &nbsp;&middot;&nbsp; max 10,000 records per file</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#5b21b6;margin-bottom:10px;font-weight:500">Select record count:</div>
+    <div class="ltest-counts">
+      <button class="cnt-btn sel" onclick="selCount('aa',50,this)">50</button>
+      <button class="cnt-btn" onclick="selCount('aa',100,this)">100</button>
+      <button class="cnt-btn" onclick="selCount('aa',200,this)">200</button>
+      <button class="cnt-btn" onclick="selCount('aa',300,this)">300</button>
+      <div class="cnt-custom"><span style="font-size:12px;color:#5b21b6;font-weight:600">Custom:</span><input id="aa-custom-cnt" type="number" min="1" max="10000" value="" placeholder="e.g. 500 (max 10,000)" oninput="selCount('aa',0,null)"/></div>
+    </div>
+    <div class="ltest-opts">
+      <label class="ltest-opt"><input type="checkbox" id="aa-mix-ctypes" checked/> Mix billing code types</label>
+      <label class="ltest-opt"><input type="checkbox" id="aa-mix-bclass" checked/> Mix billing classes (professional / institutional)</label>
+      <label class="ltest-opt"><input type="checkbox" id="aa-multi-prov" checked/> Multiple providers per record</label>
+    </div>
+    <div class="ltest-limit" id="aa-limit-msg"></div>
+    <div class="ltest-actions">
+      <button class="btn-ltest" onclick="ltestGenAA()"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate &amp; Download</button>
+      <span style="font-size:12px;color:#6d28d9" id="aa-ltest-note">Each record ~800 bytes &nbsp;&middot;&nbsp; 10,000 records &asymp; 8 MB &nbsp;&middot;&nbsp; Do not exceed 10,000 records</span>
+    </div>
+    <div class="ltest-progress" id="aa-prog"><div class="prog-bar-wrap"><div class="prog-bar" id="aa-prog-bar"></div></div><span id="aa-prog-txt">Generating...</span></div>
+    <div class="ltest-stat" id="aa-ltest-stat"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════ TABLE OF CONTENTS ═══════════════════ -->
+<div class="fpanel" id="fp-toc">
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg></div>
+      <div class="card-head-title">File Header</div>
+      <span class="card-head-tag">reporting entity</span>
+      <div class="card-head-note">Applies to the entire file</div>
+    </div>
+    <div class="card-body">
+      <div class="g4">
+        <div class="f"><label>Reporting entity name <span class="req">*</span></label><input id="th-ename" value="National Rental Providers Inc."/></div>
+        <div class="f"><label>Reporting entity type <span class="req">*</span></label><select id="th-etype"><option>issuer</option><option>health plan</option><option>third-party administrator</option><option>health insurance issuer</option></select></div>
+        <div class="f"><label>Last updated on <span class="req">*</span></label><input id="th-date" type="date" value="2026-04-12"/></div>
+        <div class="f"><label>Version</label><input id="th-ver" value="2.0.0"/></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-ico"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h10M4 18h8"/></svg></div>
+      <div class="card-head-title">reporting_structure[ ] records</div>
+      <span class="card-head-tag">plans &amp; file URLs</span>
+      <div class="card-head-note">Each tab = one plan entry with its file URLs</div>
+    </div>
+    <div class="card-body">
+      <div class="rtab-bar" id="toc-bar"></div>
+      <div id="toc-recs"></div>
+    </div>
+  </div>
+
+    <div class="abar">
+    <button class="btn-gen" onclick="genTOC()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Generate JSON</button>
+    <button class="btn-dl" id="dl-toc" onclick="dlFile('toc')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Download</button>
+    <button class="btn-sec" onclick="rstTOC()"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset</button>
+  </div>
+  <div class="err-box" id="err-toc"></div>
+    <div class="prev-wrap" id="pw-toc">
+    <div class="prev-bar">
+      <div class="prev-bar-left">
+        <div class="prev-dots"><div class="prev-dot" style="background:#ff5f57"></div><div class="prev-dot" style="background:#ffbd2e"></div><div class="prev-dot" style="background:#28ca41"></div></div>
+        <span id="pf-toc">output.json</span>
+      </div>
+      <button onclick="copyJ('toc')">Copy JSON</button>
+    </div>
+    <pre class="prev-code" id="pc-toc"></pre>
+  </div>
+    <div class="val-wrap" id="vw-toc">
+    <div class="val-head" id="vh-toc"></div>
+    <div class="val-body">
+      <div class="val-stats" id="vs-toc"></div>
+      <div class="val-toolbar" id="vt-toc"></div><div id="vb-toc"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+var CTYPES=['CPT','HCPCS','ICD','MS-DRG','R-DRG','S-DRG','APS-DRG','AP-DRG','APR-DRG','APC','NDC','HIPPS','LOCAL','EAPG','CDT','RC','CSTM-ALL'];
+var NTYPES=['negotiated','derived','fee schedule','percentage','per diem'];
+var BCLASS_INN=['professional','institutional','both'];
+var BCLASS_AA=['professional','institutional'];
+var SETTINGS_INN=['outpatient','inpatient','both'];
+var SETTINGS_AA=['outpatient','inpatient'];
+var NARR=['ffs','bundle','capitation'];
+var DRG=['MS-DRG','R-DRG','S-DRG','APS-DRG','AP-DRG','APR-DRG'];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+var _uid=0;
+function uid(){return 'id'+(++_uid);}
+function gv(id){var e=document.getElementById(id);return e?e.value.trim():'';}
+function sv(id,val){var e=document.getElementById(id);if(e)e.value=val;}
+function se(arr,cur){return arr.map(function(v){return '<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>';}).join('');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function isNPI(n){return /^[1-9]\d{9}$/.test(String(n));}
+
+// CMS schema: service_code pattern ^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$
+// Valid: 10-99 (two-digit, at least one non-zero digit in each pair) OR literal CSTM-00
+function isValidSvc(s){return s==='CSTM-00'||/^([1-9][0-9]|[0-9][1-9])$/.test(s);}
+
+function validateSvcs(raw,label,errFn){
+  if(!raw||!raw.trim())return[];
+  var parts=raw.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var valid=[];
+  for(var i=0;i<parts.length;i++){
+    if(!isValidSvc(parts[i])){
+      if(errFn)errFn(label+'Service code "'+parts[i]+'" is invalid. Must be a 2-digit number 10-99 (e.g. 11, 22) or "CSTM-00".');
+      return null;
+    }
+    valid.push(parts[i]);
+  }
+  return valid;
+}
+function parseNPIs(raw){return raw.split(',').map(function(s){return s.trim();}).filter(Boolean);}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('active');
+  setTimeout(function(){t.classList.remove('active');},2500);
+}
+function showErr(scope,msg){
+  var e=document.getElementById('err-'+scope);
+  e.textContent=msg;
+  e.style.display='block';
+  e.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // clear stale validation
+  var vw=document.getElementById('vw-'+scope);
+  if(vw)vw.style.display='none';
+}
+function clearErr(scope){
+  var e=document.getElementById('err-'+scope);
+  if(e)e.style.display='none';
+}
+function setCount(scope,n,ok){
+  var e=document.getElementById('fcnt-'+scope);
+  e.textContent=n;
+  ok?e.classList.add('ok'):e.classList.remove('ok');
+}
+
+// ─── FILE TYPE SWITCH ─────────────────────────────────────────────────────────
+function switchF(id,el){
+  document.querySelectorAll('.fs-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.fpanel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('fp-'+id).classList.add('active');
+}
+
+// ─── PLAN SPONSOR TOGGLE ─────────────────────────────────────────────────────
+function toggleSponsor(pfx){
+  var idtype=gv(pfx+'-idtype');
+  var lbl=document.getElementById(pfx+'-slbl');
+  var inp=document.getElementById(pfx+'-sponsor');
+  var hint=document.getElementById(pfx+'-shint');
+  var cond=document.getElementById(pfx+'-scond');
+  if(!lbl)return;
+  if(idtype==='ein'){
+    lbl.innerHTML='Plan sponsor name <span class="req">*</span><span class="cond-label cond-req" id="'+pfx+'-scond" style="margin-left:4px">required when Plan ID type = ein</span>';
+    if(inp){inp.style.borderColor='';inp.style.background='';}
+    if(hint)hint.innerHTML='Required because Plan ID type is currently set to <b>ein</b>';
+    if(hint)hint.style.color='var(--red)';
+  } else {
+    lbl.innerHTML='Plan sponsor name <span class="cond-label cond-opt" id="'+pfx+'-scond" style="margin-left:4px">optional — not required for hios</span>';
+    if(inp){inp.style.borderColor='#d1d5db';inp.style.background='#fafafa';}
+    if(hint)hint.innerHTML='Not required when Plan ID type is <b>hios</b>';
+    if(hint)hint.style.color='var(--txt3)';
+  }
+}
+
+// ─── RECORD TAB MANAGER ──────────────────────────────────────────────────────
+var RS={inn:[],aa:[],toc:[]};
+var ACTIVE={inn:null,aa:null,toc:null};
+
+function addTab(scope,buildFn,defaults){
+  var id=uid();
+  RS[scope].push(id);
+  var n=RS[scope].length;
+  var bar=document.getElementById(scope+'-bar');
+  // tab button
+  var btn=document.createElement('button');
+  btn.className='rtab';btn.id='rt-'+scope+'-'+id;
+  btn.innerHTML='<span class="rtab-num">'+n+'</span> Record '+n+
+    ' <button class="rtab-close" onclick="delTab(\''+scope+'\',\''+id+'\',event)" title="Remove">✕</button>';
+  btn.onclick=function(e){if(e.target.classList.contains('rtab-close'))return;activateTab(scope,id);};
+  bar.insertBefore(btn,bar.querySelector('.add-rec'));
+  // panel
+  var div=document.createElement('div');
+  div.className='rpanel';div.id='rp-'+scope+'-'+id;
+  div.innerHTML='<div class="rec-body">'+buildFn(id,defaults||{})+'</div>';
+  document.getElementById(scope+'-recs').appendChild(div);
+  activateTab(scope,id);
+  return id;
+}
+
+function activateTab(scope,id){
+  ACTIVE[scope]=id;
+  document.querySelectorAll('#'+scope+'-bar .rtab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('#'+scope+'-recs .rpanel').forEach(function(p){p.classList.remove('active');});
+  var t=document.getElementById('rt-'+scope+'-'+id);
+  var p=document.getElementById('rp-'+scope+'-'+id);
+  if(t)t.classList.add('active');
+  if(p)p.classList.add('active');
+}
+
+function delTab(scope,id,e){
+  e.stopPropagation();
+  if(RS[scope].length<=1){toast('⚠ At least one record is required.');return;}
+  RS[scope]=RS[scope].filter(function(r){return r!==id;});
+  var t=document.getElementById('rt-'+scope+'-'+id);
+  var p=document.getElementById('rp-'+scope+'-'+id);
+  if(t)t.remove();if(p)p.remove();
+  if(ACTIVE[scope]===id)activateTab(scope,RS[scope][0]);
+  renumTabs(scope);
+}
+
+function renumTabs(scope){
+  RS[scope].forEach(function(id,i){
+    var t=document.getElementById('rt-'+scope+'-'+id);
+    if(!t)return;
+    var rn=t.querySelector('.rtab-num');if(rn)rn.textContent=i+1;
+    var rx=t.querySelector('.rtab-close');
+    t.childNodes[1].textContent=' Record '+(i+1)+' ';
+    if(rx)t.appendChild(rx);
+  });
+}
+
+function addRecBtn(scope,buildFn,dfltFn){
+  var bar=document.getElementById(scope+'-bar');
+  var btn=document.createElement('button');
+  btn.className='rtab-add';btn.textContent='＋ Add Record';
+  btn.onclick=function(){addTab(scope,buildFn,dfltFn?dfltFn():{});};
+  bar.appendChild(btn);
+}
+
+function rmBlk(id){var e=document.getElementById(id);if(e)e.remove();}
+
+// ─── FIELD HELPERS ────────────────────────────────────────────────────────────
+function F(lbl,id,val,req,type,hint){
+  var t=type||'text';
+  var h=hint?'<span class="f-hint">'+hint+'</span>':'';
+  return '<div class="f"><label>'+lbl+(req?'<span class="req"> *</span>':'')+
+    '</label><input id="'+id+'" type="'+t+'" value="'+esc(val||'')+'"/>'+h+'</div>';
+}
+function FS(lbl,id,opts,cur,req,hint){
+  var h=hint?'<span class="f-hint">'+hint+'</span>':'';
+  return '<div class="f"><label>'+lbl+(req?'<span class="req"> *</span>':'')+
+    '</label><select id="'+id+'">'+se(opts,cur)+'</select>'+h+'</div>';
+}
+
+// ─── PROVIDER REFERENCES (INN) ────────────────────────────────────────────────
+var PROVS=[];
+
+function addProv(d){
+  var pid=uid();PROVS.push(pid);
+  var n=PROVS.length;
+  var el=document.createElement('div');
+  el.className='blk';el.id='pv-'+pid;
+  el.innerHTML=
+    '<div class="blk-hd"><span class="blk-pill">provider_group_id: '+n+'</span> Provider Reference #'+n+'</div>'+
+    '<button class="rm" onclick="rmProv(\''+pid+'\')">✕ Remove</button>'+
+    '<div class="g3">'+
+      F('NPI(s)','pnpi-'+pid,(d&&d.npis)||'1366433195',true,'text','Comma-separated 10-digit NPIs')+
+      FS('TIN type','pttype-'+pid,['ein','npi'],(d&&d.ttype)||'ein',true)+
+      F('TIN value','ptval-'+pid,(d&&d.tval)||'34-1893439',true,'text','Format: XX-XXXXXXX or XXXXXXXXX (hyphen optional per CMS schema)')+
+    '</div>'+
+    '<div class="g2 mt">'+
+      F('Business name','pbiz-'+pid,(d&&d.biz)||'Provider Group One',false,'text','Required when TIN type = ein')+
+      F('Network name(s)','pnet-'+pid,(d&&d.net)||'Network A',true,'text','Comma-separated')+
+    '</div>';
+  document.getElementById('inn-provs').appendChild(el);
+}
+
+function rmProv(pid){
+  if(PROVS.length<=1){toast('⚠ At least one provider reference is required.');return;}
+  PROVS=PROVS.filter(function(p){return p!==pid;});
+  var el=document.getElementById('pv-'+pid);if(el)el.remove();
+  document.getElementById('inn-provs').querySelectorAll('.blk').forEach(function(b,i){
+    var badge=b.querySelector('.blk-pill');
+    if(badge)badge.textContent='provider_group_id: '+(i+1);
+    var t=b.querySelector('.blk-hd');
+    if(t){var old=t.innerHTML;t.innerHTML=old.replace(/Provider Reference #\d+/,'Provider Reference #'+(i+1));}
+  });
+}
+
+function getProvRefs(errFn){
+  var refs=[];
+  for(var i=0;i<PROVS.length;i++){
+    var pid=PROVS[i];var lbl='Provider #'+(i+1)+': ';
+    var npiRaw=gv('pnpi-'+pid);
+    if(!npiRaw){if(errFn)errFn(lbl+'NPI is required.');return null;}
+    var npiList=parseNPIs(npiRaw);
+    var npiNums=[];
+    for(var j=0;j<npiList.length;j++){
+      var n=parseInt(npiList[j]);
+      if(!isNPI(n)){if(errFn)errFn(lbl+'"'+npiList[j]+'" is not a valid 10-digit NPI.');return null;}
+      npiNums.push(n);
+    }
+    var ttype=gv('pttype-'+pid)||'ein';
+    var tval=gv('ptval-'+pid);
+    if(!tval){if(errFn)errFn(lbl+'TIN value is required.');return null;}
+    if(ttype==='npi'&&!isNPI(tval)){if(errFn)errFn(lbl+'TIN type is npi — TIN value must be a valid 10-digit NPI.');return null;}
+    if(ttype==='ein'&&!/^\d{2}-?\d{7}$/.test(tval)){if(errFn)errFn(lbl+'TIN value "'+tval+'" is not a valid EIN. Use format XX-XXXXXXX or XXXXXXXXX (e.g. 34-1893439 or 341893439).');return null;}
+    var biz=gv('pbiz-'+pid);
+    if(ttype==='ein'&&!biz){if(errFn)errFn(lbl+'Business name is required when TIN type is ein.');return null;}
+    var nets=gv('pnet-'+pid).split(',').map(function(s){return s.trim();}).filter(Boolean);
+    if(!nets.length){if(errFn)errFn(lbl+'Network name is required.');return null;}
+    var tin={type:ttype,value:tval};
+    if(ttype==='ein')tin.business_name=biz;
+    refs.push({provider_group_id:i+1,network_name:nets,provider_groups:[{npi:npiNums,tin:tin}]});
+  }
+  return refs;
+}
+
+// ─── INN RECORD ──────────────────────────────────────────────────────────────
+function buildINN(id,d){
+  var ctype=d.ctype||'CPT';
+  var bclass=d.bclass||'institutional';
+  var isDrg=DRG.indexOf(ctype)!==-1;
+  var isPro=(bclass==='professional'||bclass==='both');
+  var provOpts=PROVS.length
+    ?PROVS.map(function(pid,i){return '<option value="'+(i+1)+'"'+(String(i+1)===String(d.pref||'1')?' selected':'')+'>Provider ref '+(i+1)+'</option>';}).join('')
+    :'<option value="1">Provider ref 1</option>';
+
+  return '<div class="sec-label">Billing code</div>'+
+    '<div class="g5">'+
+      '<div class="f"><label>Code type <span class="req">*</span></label><select id="ct-'+id+'" onchange="onCT(\''+id+'\')">'+se(CTYPES,ctype)+'</select></div>'+
+      F('Billing code','bc-'+id,d.code||'',true,'text','e.g. Q9957')+
+      F('Version','bv-'+id,d.ver||'2023',true)+
+      F('Name','bn-'+id,d.name||'',true,'text','Short item/service name')+
+      '<div class="f"><label>Neg. arrangement <span class="req">*</span></label><select id="na-'+id+'">'+se(NARR,d.negarr||'ffs')+'</select></div>'+
+    '</div>'+
+    '<div class="g2 mt">'+
+      '<div class="f"><label>Description <span class="req">*</span></label><textarea id="bd-'+id+'">'+esc(d.desc||'')+'</textarea></div>'+
+      '<div class="f" id="sevf-'+id+'">'+
+        '<label id="sevl-'+id+'">'+(isDrg?'Severity of illness <span class="req">*</span>':'Severity of illness <span class="cond-label cond-opt">DRG only</span>')+'</label>'+
+        '<input id="sev-'+id+'" value="'+esc(d.sev||'')+'"'+(isDrg?'':' disabled')+'/>'+
+        (isDrg?'<span class="f-warn">Required for DRG types. e.g. "Major Complications or Comorbidities"</span>':'<span class="f-hint">Only for MS-DRG, R-DRG, etc.</span>')+
+      '</div>'+
+    '</div>'+
+
+    '<div class="sec-label">Negotiated price</div>'+
+    '<div class="g5">'+
+      '<div class="f"><label>Provider reference <span class="req">*</span></label><select id="pr-'+id+'">'+provOpts+'</select></div>'+
+      '<div class="f"><label>Negotiated type <span class="req">*</span></label><select id="nt-'+id+'">'+se(NTYPES,d.ntype||'negotiated')+'</select></div>'+
+      '<div class="f"><label>Billing class <span class="req">*</span></label><select id="ncl-'+id+'" onchange="onBC(\''+id+'\')">'+se(BCLASS_INN,bclass)+'</select></div>'+
+      '<div class="f"><label>Setting <span class="req">*</span></label><select id="ns-'+id+'">'+se(SETTINGS_INN,d.setting||'outpatient')+'</select></div>'+
+      F('Negotiated rate ($)','nr-'+id,d.rate||'',true,'text','e.g. 1075.50')+
+    '</div>'+
+    '<div class="g3 mt">'+
+      F('Expiration date','ne-'+id,d.exp||'2026-12-31',true,'date')+
+      '<div class="f" id="svcf-'+id+'">'+
+        '<label id="svcl-'+id+'">'+(isPro?'Service code(s) <span class="req">*</span>':'Service code(s) <span class="cond-label cond-opt">N/A for institutional</span>')+'</label>'+
+        '<input id="nsvc-'+id+'" value="'+esc(d.svc||'')+'" placeholder="e.g. 11, 22 or CSTM-00"'+(isPro?'':' disabled')+'/>'+
+        (isPro?'<span class="f-warn">Format: 2-digit (10-99) or CSTM-00, comma-separated. Required for: '+bclass+'</span>':'<span class="f-hint">Required only for professional/both</span>')+
+      '</div>'+
+      F('Modifier(s)','nmod-'+id,d.mod||'',false,'text','Optional, comma-separated')+
+    '</div>';
+}
+
+function onCT(id){
+  var ctype=gv('ct-'+id);
+  var isDrg=DRG.indexOf(ctype)!==-1;
+  var lbl=document.getElementById('sevl-'+id);
+  var inp=document.getElementById('sev-'+id);
+  var fld=document.getElementById('sevf-'+id);
+  if(lbl)lbl.innerHTML=isDrg?'Severity of illness <span class="req">*</span>':'Severity of illness <span class="cond-label cond-opt">DRG only</span>';
+  if(inp){inp.disabled=!isDrg;if(!isDrg)inp.value='';}
+  if(fld){
+    var hint=fld.querySelector('.warn,.hint');
+    if(hint){hint.className=isDrg?'warn':'hint';hint.textContent=isDrg?'Required for DRG types. e.g. "Major Complications or Comorbidities"':'Only for MS-DRG, R-DRG, etc.';}
+  }
+}
+
+function onBC(id){
+  var bclass=gv('ncl-'+id);
+  var isPro=(bclass==='professional'||bclass==='both');
+  var lbl=document.getElementById('svcl-'+id);
+  var inp=document.getElementById('nsvc-'+id);
+  var fld=document.getElementById('svcf-'+id);
+  if(lbl)lbl.innerHTML=isPro?'Service code(s) <span class="req">*</span>':'Service code(s) <span class="cond-label cond-opt">N/A for institutional</span>';
+  if(inp){inp.disabled=!isPro;if(!isPro)inp.value='';}
+  if(fld){
+    var hint=fld.querySelector('.warn,.hint');
+    if(hint){hint.className=isPro?'warn':'hint';hint.textContent=isPro?'Format: 2-digit (10-99) or CSTM-00, comma-separated':'Only when billing class is professional or both';}
+  }
+}
+
+// ─── GENERATE INN ────────────────────────────────────────────────────────────
+function genINN(){
+  clearErr('inn');
+  var entity=gv('ih-ename');if(!entity){showErr('inn','Reporting entity name is required.');return;}
+  var upd=gv('ih-date')||new Date().toISOString().split('T')[0];
+  var planid=gv('ih-planid');var idtype=gv('ih-idtype');var sponsor=gv('ih-sponsor');
+  if(planid&&idtype==='ein'&&!sponsor){showErr('inn','Plan sponsor name is required when Plan ID type is "ein".');return;}
+  if(!PROVS.length){showErr('inn','Add at least one provider reference.');return;}
+  if(!RS.inn.length){showErr('inn','Add at least one in_network record.');return;}
+  var provRefs=getProvRefs(function(m){showErr('inn',m);});
+  if(!provRefs)return;
+
+  var inNet=[];
+  for(var i=0;i<RS.inn.length;i++){
+    var rid=RS.inn[i];var R='Record '+(i+1)+': ';
+    var ctype=gv('ct-'+rid);
+    var code=gv('bc-'+rid);var name=gv('bn-'+rid);var desc=gv('bd-'+rid);
+    var rateRaw=gv('nr-'+rid);var rate=parseFloat(rateRaw);
+    var bclass=gv('ncl-'+rid)||'institutional';
+    var setting=gv('ns-'+rid)||'outpatient';
+    var sev=gv('sev-'+rid);
+    if(!code){showErr('inn',R+'Billing code is required.');return;}
+    if(!name){showErr('inn',R+'Name is required.');return;}
+    if(!desc){showErr('inn',R+'Description is required.');return;}
+    if(!rateRaw||isNaN(rate)||rate<0){showErr('inn',R+'Negotiated rate must be a valid number (e.g. 1075.50).');return;}
+    if(DRG.indexOf(ctype)!==-1&&!sev){showErr('inn',R+'Severity of illness is required for code type "'+ctype+'".');return;}
+    if(setting==='inpatient'&&bclass==='professional'){showErr('inn',R+'Billing class "professional" cannot be used with setting "inpatient".');return;}
+    var svcRaw=gv('nsvc-'+rid);
+    var svcs=[];
+    if(bclass==='professional'||bclass==='both'){
+      if(!svcRaw){showErr('inn',R+'Service code(s) are required when billing class is "'+bclass+'".');return;}
+      var _svcs=validateSvcs(svcRaw,R,function(m){showErr('inn',m);});
+      if(_svcs===null)return;
+      if(!_svcs.length){showErr('inn',R+'Service code(s) are required when billing class is "'+bclass+'". Enter 2-digit codes (10-99) or CSTM-00.');return;}
+      svcs=_svcs;
+    } else if(svcRaw){
+      var _svcs2=validateSvcs(svcRaw,R,function(m){showErr('inn',m);});
+      if(_svcs2===null)return;
+      svcs=_svcs2;
+    }
+    var mods=gv('nmod-'+rid).split(',').map(function(s){return s.trim();}).filter(Boolean);
+    var pref=parseInt(gv('pr-'+rid)||'1');
+    var price={negotiated_type:gv('nt-'+rid)||'negotiated',negotiated_rate:parseFloat(rate.toFixed(2)),expiration_date:gv('ne-'+rid)||'9999-12-31',billing_class:bclass,setting:setting};
+    if(svcs.length)price.service_code=svcs;
+    if(mods.length)price.billing_code_modifier=mods;
+    var entry={negotiation_arrangement:gv('na-'+rid)||'ffs',name:name,billing_code_type:ctype,billing_code_type_version:gv('bv-'+rid)||'2023',billing_code:code,description:desc,negotiated_rates:[{provider_references:[pref],negotiated_prices:[price]}]};
+    if(sev)entry.severity_of_illness=sev;
+    inNet.push(entry);
+  }
+
+  var result={};
+  result.reporting_entity_name=entity;
+  result.reporting_entity_type=gv('ih-etype');
+  var pname=gv('ih-pname');
+  if(pname)result.plan_name=pname;
+  if(planid){result.plan_id_type=idtype;result.plan_id=planid;}
+  var mkt=gv('ih-mkt')||'individual';result.plan_market_type=mkt;
+  if(sponsor)result.plan_sponsor_name=sponsor;
+  var issuer=gv('ih-issuer');if(issuer)result.issuer_name=issuer;
+  result.last_updated_on=upd;
+  result.version=gv('ih-ver')||'2.0.0';
+  result.provider_references=provRefs;
+  result.in_network=inNet;
+  GEN.inn=result;
+  showResult('inn',result,upd,gv('ih-issuer'),pname,'in-network-rates');
+}
+
+// ─── AA RECORD ────────────────────────────────────────────────────────────────
+function buildAA(id,d){
+  var ctype=d.ctype||'CPT';
+  var bclass=d.bclass||'professional';
+  var isPro=(bclass==='professional');
+  return '<div class="sec-label">OON service</div>'+
+    '<div class="g4">'+
+      '<div class="f"><label>Code type <span class="req">*</span></label><select id="at-'+id+'">'+se(CTYPES,ctype)+'</select></div>'+
+      F('Billing code','ac-'+id,d.code||'99213',true,'text','e.g. 99213')+
+      F('Version','av-'+id,d.ver||'2023',true)+
+      F('Name','an-'+id,d.name||'Office visit, est patient',true,'text','')+
+    '</div>'+
+    '<div class="g2 mt">'+
+      '<div class="f"><label>Description <span class="req">*</span></label><textarea id="ad-'+id+'">'+esc(d.desc||'Office or outpatient visit for established patient')+'</textarea></div>'+
+      '<div></div>'+
+    '</div>'+
+
+    '<div class="sec-label">Allowed amounts — TIN &amp; billing info</div>'+
+    '<div class="g4">'+
+      FS('TIN type','attype-'+id,['ein','npi'],d.ttype||'ein',true)+
+      F('TIN value','atval-'+id,d.tval||'34-1893439',true,'text','Format: XX-XXXXXXX or XXXXXXXXX (hyphen optional per CMS schema)')+
+      '<div class="f"><label>Billing class <span class="req">*</span></label><select id="abclass-'+id+'" onchange="onABC(\''+id+'\')">'+se(BCLASS_AA,bclass)+'</select></div>'+
+      '<div class="f"><label>Setting <span class="req">*</span></label><select id="aset-'+id+'">'+se(SETTINGS_AA,d.setting||'outpatient')+'</select></div>'+
+    '</div>'+
+    '<div class="mt"><div class="f" id="asvcf-'+id+'">'+
+      '<label id="asvcl-'+id+'">'+(isPro?'Service code(s) <span class="req">*</span>':'Service code(s) <span class="cond-label cond-opt">N/A for institutional</span>')+'</label>'+
+      '<input id="asvc-'+id+'" value="'+esc(d.svc||'')+'" placeholder="e.g. 11, 22"'+(isPro?'':' disabled')+'/>'+
+      (isPro?'<span class="f-warn">Format: 2-digit (10-99) or CSTM-00. Required for: professional</span>':'<span class="f-hint">Required only when billing class is professional</span>')+
+    '</div></div>'+
+
+    '<div class="sec-label">Payment &amp; providers</div>'+
+    F('Allowed amount ($)','aamt-'+id,d.amt||'150.00',true,'text','Dollar amount — e.g. 150.00')+
+    '<div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">Providers <span style="font-size:11px;color:var(--txt3);font-weight:400">— NPI array + billed charge</span></div>'+
+    '<div id="aprovs-'+id+'"></div>'+
+    '<button class="add-sub" style="margin-top:4px" onclick="addAAP(\''+id+'\')">＋ Add Provider</button>';
+}
+
+function onABC(id){
+  var bclass=gv('abclass-'+id);
+  var isPro=(bclass==='professional');
+  var lbl=document.getElementById('asvcl-'+id);
+  var inp=document.getElementById('asvc-'+id);
+  var fld=document.getElementById('asvcf-'+id);
+  if(lbl)lbl.innerHTML=isPro?'Service code(s) <span class="req">*</span>':'Service code(s) <span class="cond-label cond-opt">N/A for institutional</span>';
+  if(inp){inp.disabled=!isPro;if(!isPro)inp.value='';}
+  if(fld){var hint=fld.querySelector('.warn,.hint');if(hint){hint.className=isPro?'warn':'hint';hint.textContent=isPro?'Format: 2-digit (10-99) or CSTM-00, comma-separated':'Only when billing class is professional';}}
+}
+
+function addAAP(recId,d){
+  var pid=uid();
+  var el=document.createElement('div');
+  el.className='blk';el.id='aap-'+pid;
+  el.style.background='#f0f9ff';el.style.borderColor='#bae6fd';
+  el.innerHTML='<button class="rm" onclick="rmBlk(\'aap-'+pid+'\')">✕ Remove</button>'+
+    '<div class="g2">'+
+      F('NPI(s)','apn-'+pid,(d&&d.npi)||'1366433195',true,'text','Comma-separated 10-digit NPIs')+
+      F('Billed charge ($)','apb-'+pid,(d&&d.billed)||'275.00',true,'text','e.g. 275.00')+
+    '</div>';
+  document.getElementById('aprovs-'+recId).appendChild(el);
+  // Set values after DOM insertion to avoid innerHTML quirks
+  var ne=document.getElementById('apn-'+pid);
+  var be=document.getElementById('apb-'+pid);
+  if(ne)ne.value=(d&&d.npi)||'1366433195';
+  if(be)be.value=(d&&d.billed)||'275.00';
+}
+
+// ─── GENERATE AA ─────────────────────────────────────────────────────────────
+function genAA(){
+  clearErr('aa');
+  var entity=gv('ah-ename');if(!entity){showErr('aa','Reporting entity name is required.');return;}
+  var upd=gv('ah-date')||new Date().toISOString().split('T')[0];
+  var planid=gv('ah-planid');var idtype=gv('ah-idtype');var sponsor=gv('ah-sponsor');
+  if(planid&&idtype==='ein'&&!sponsor){showErr('aa','Plan sponsor name is required when Plan ID type is "ein".');return;}
+  if(!RS.aa.length){showErr('aa','Add at least one OON record.');return;}
+
+  var oon=[];
+  for(var i=0;i<RS.aa.length;i++){
+    var rid=RS.aa[i];var R='Record '+(i+1)+': ';
+    var code=gv('ac-'+rid);var name=gv('an-'+rid);var desc=gv('ad-'+rid);
+    var amtRaw=gv('aamt-'+rid);var amt=parseFloat(amtRaw);
+    var ttype=gv('attype-'+rid)||'ein';var tval=gv('atval-'+rid);
+    var bclass=gv('abclass-'+rid)||'professional';var setting=gv('aset-'+rid)||'outpatient';
+    var svcRaw=gv('asvc-'+rid);
+    var svcs=[];
+    if(svcRaw){
+      var _asvcs=validateSvcs(svcRaw,R,function(m){showErr('aa',m);});
+      if(_asvcs===null)return;
+      svcs=_asvcs;
+    }
+    if(!code){showErr('aa',R+'Billing code is required.');return;}
+    if(!name){showErr('aa',R+'Name is required.');return;}
+    if(!desc){showErr('aa',R+'Description is required.');return;}
+    if(!amtRaw||isNaN(amt)||amt<0){showErr('aa',R+'Allowed amount must be a valid number (e.g. 150.00).');return;}
+    if(!tval){showErr('aa',R+'TIN value is required.');return;}
+    if(ttype==='npi'&&!isNPI(tval)){showErr('aa',R+'TIN type is "npi" — TIN value must be a valid 10-digit NPI.');return;}
+    if(ttype==='ein'&&!/^\d{2}-?\d{7}$/.test(tval)){showErr('aa',R+'TIN value "'+tval+'" is not a valid EIN. Use format XX-XXXXXXX or XXXXXXXXX (e.g. 34-1893439 or 341893439).');return;}
+    if(bclass==='professional'&&!svcs.length){showErr('aa',R+'Service code(s) required when billing class is "professional". Enter 2-digit codes (10-99) or CSTM-00.');return;}
+
+    // providers
+    var provCont=document.getElementById('aprovs-'+rid);
+    var pblks=provCont?provCont.querySelectorAll('[id^="aap-"]'):[];
+    if(!pblks.length){showErr('aa',R+'Add at least one provider.');return;}
+    var providers=[];
+    for(var pi=0;pi<pblks.length;pi++){
+      var pblock=pblks[pi];
+      // extract uid from block id: 'aap-idN' → 'idN'
+      var puid=pblock.id.replace('aap-','');
+      var npiRaw=document.getElementById('apn-'+puid);
+      var billedRaw=document.getElementById('apb-'+puid);
+      var npiVal=npiRaw?npiRaw.value.trim():'';
+      var billedVal=billedRaw?billedRaw.value.trim():'';
+      if(!npiVal){showErr('aa',R+'Provider '+(pi+1)+': NPI is required.');return;}
+      var npiList=parseNPIs(npiVal);
+      var npiNums=[];
+      for(var ni=0;ni<npiList.length;ni++){
+        var n=parseInt(npiList[ni]);
+        if(!isNPI(n)){showErr('aa',R+'Provider '+(pi+1)+': "'+npiList[ni]+'" is not a valid 10-digit NPI.');return;}
+        npiNums.push(n);
+      }
+      if(!billedVal){showErr('aa',R+'Provider '+(pi+1)+': Billed charge is required.');return;}
+      var bc=parseFloat(billedVal);
+      if(isNaN(bc)||bc<0){showErr('aa',R+'Provider '+(pi+1)+': Billed charge must be a valid number (e.g. 275.00).');return;}
+      providers.push({npi:npiNums,billed_charge:parseFloat(bc.toFixed(2))});
+    }
+
+    var mods=gv('amod-'+rid)?gv('amod-'+rid).split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    var payment={allowed_amount:parseFloat(amt.toFixed(2)),providers:providers};
+    if(mods.length)payment.billing_code_modifier=mods;
+    var aaObj={tin:{type:ttype,value:tval},billing_class:bclass,setting:setting,payments:[payment]};
+    if(bclass==='professional'&&svcs.length)aaObj.service_code=svcs;
+    oon.push({name:name,billing_code_type:gv('at-'+rid)||'CPT',billing_code:code,billing_code_type_version:gv('av-'+rid)||'2023',description:desc,allowed_amounts:[aaObj]});
+  }
+
+  var result={};
+  result.reporting_entity_name=entity;
+  result.reporting_entity_type=gv('ah-etype');
+  var pname=gv('ah-pname');
+  if(pname)result.plan_name=pname;
+  if(planid){result.plan_id_type=idtype;result.plan_id=planid;}
+  var mkt2=gv('ah-mkt')||'individual';result.plan_market_type=mkt2;
+  if(sponsor)result.plan_sponsor_name=sponsor;
+  var issuer=gv('ah-issuer');if(issuer)result.issuer_name=issuer;
+  result.last_updated_on=upd;
+  result.version=gv('ah-ver')||'2.0.0';
+  result.out_of_network=oon;
+  GEN.aa=result;
+  showResult('aa',result,upd,gv('ah-issuer'),pname,'allowed-amounts');
+}
+
+// ─── TOC RECORD ──────────────────────────────────────────────────────────────
+function buildTOC(id,d){
+  var idtype=d.idtype||'ein';
+  var isEIN=(idtype==='ein');
+  return '<div class="sec-label">Plan identification</div>'+
+    '<div class="g3">'+
+      F('Plan name','tpn-'+id,d.pname||'HealthCare Basic Plan12',true)+
+      F('Plan ID','tpid-'+id,d.planid||'',true)+
+      '<div class="f"><label>Plan ID type <span class="req">*</span></label>'+
+        '<select id="tpit-'+id+'" onchange="onTIT(\''+id+'\')">'+se(['ein','hios'],idtype)+'</select>'+
+        '<span class="f-hint">Changing this affects plan_sponsor_name requirement</span></div>'+
+    '</div>'+
+    '<div class="g3 mt">'+
+      '<div class="f">'+
+        '<label id="tpsl-'+id+'">Plan sponsor name'+(isEIN?' <span class="req">*</span>':' <span class="cond-label cond-opt">optional for hios</span>')+'</label>'+
+        '<input id="tpsp-'+id+'" value="'+esc(d.sponsor||'HealthCare Inc.')+'"/>'+
+        '<span class="f-hint" id="tpsph-'+id+'">'+(isEIN?'Required because Plan ID type is ein':'Only required when Plan ID type is ein')+'</span>'+
+      '</div>'+
+      F('Issuer name','tpis-'+id,d.issuer||'HealthCare Issuer',true,'text','Required by CMS schema')+
+      FS('Market type','tpmt-'+id,['group','individual'],d.mkt||'individual',true)+
+    '</div>'+
+
+    // in_network_files
+    '<div class="toc-zone toc-inn" style="margin-top:14px">'+
+      '<div class="toc-zone-hd">'+
+        '<span style="font-size:16px">🌐</span>'+
+        '<div><b>in_network_files[ ]</b><div style="font-size:10px;color:#6b7280">Array — add one or more in-network rate file URLs</div></div>'+
+      '</div>'+
+      '<div class="toc-note">Each entry needs a <b>description</b> and a <b>location URL</b> starting with <code>https://</code></div>'+
+      '<div id="tinn-'+id+'"></div>'+
+      '<button class="add-sub" style="border-color:#bae6fd;color:#0369a1;width:100%;justify-content:center;margin-top:4px" onclick="addTF(\''+id+'\',\'inn\',{})">＋ Add In-Network File URL</button>'+
+    '</div>'+
+
+    // allowed_amount_file
+    '<div class="toc-zone toc-aa" style="margin-top:10px">'+
+      '<div class="toc-zone-hd">'+
+        '<span style="font-size:16px">💊</span>'+
+        '<div><b>allowed_amount_file</b><div style="font-size:10px;color:#6b7280">Single object — only one allowed per plan (CMS schema)</div></div>'+
+      '</div>'+
+      '<div class="toc-note">One URL entry only. Needs a <b>description</b> and a <b>location URL</b> starting with <code>https://</code></div>'+
+      '<div id="taa-'+id+'"></div>'+
+      '<button class="add-sub" id="taabtn-'+id+'" style="border-color:#e9d5ff;color:#7e22ce;width:100%;justify-content:center;margin-top:4px" onclick="addTFAA(\''+id+'\',{})">＋ Set Allowed Amount File URL</button>'+
+    '</div>';
+}
+
+function onTIT(id){
+  var idtype=gv('tpit-'+id);var isEIN=(idtype==='ein');
+  var lbl=document.getElementById('tpsl-'+id);
+  var hint=document.getElementById('tpsph-'+id);
+  if(lbl)lbl.innerHTML='Plan sponsor name'+(isEIN?' <span class="req">*</span>':' <span class="cond-label cond-opt">optional for hios</span>');
+  if(hint)hint.textContent=isEIN?'Required because Plan ID type is ein':'Only required when Plan ID type is ein';
+}
+
+function addTF(recId,type,d){
+  var fid=uid();
+  var cont=document.getElementById((type==='inn'?'tinn-':'taa-')+recId);
+  var entry=document.createElement('div');
+  entry.id='tf-'+fid;entry.className='toc-file-entry';
+  entry.innerHTML=
+    '<button class="toc-entry-rm" onclick="rmTF(\''+fid+'\',\''+recId+'\',\''+type+'\')">✕ Remove</button>'+
+    '<div class="f" style="margin-bottom:8px">'+
+      '<label style="font-size:12px;font-weight:600">Description <span class="req">*</span></label>'+
+      '<input id="tfd-'+fid+'" value="'+esc(d.description||'')+'"/>'+
+    '</div>'+
+    '<div class="f">'+
+      '<label style="font-size:12px;font-weight:600">Location URL <span class="req">*</span></label>'+
+      '<input id="tfl-'+fid+'" value="'+esc(d.location||'')+'" placeholder="https://..." oninput="checkURL(\''+fid+'\',this.value)"/>'+
+      '<span id="tfh-'+fid+'" style="font-size:11px;margin-top:3px;display:none"></span>'+
+    '</div>';
+  cont.appendChild(entry);
+  // set values after insert
+  var de=document.getElementById('tfd-'+fid);var le=document.getElementById('tfl-'+fid);
+  if(de)de.value=d.description||'';
+  if(le){le.value=d.location||'';if(d.location)checkURL(fid,d.location);}
+}
+
+function addTFAA(recId,d){
+  var cont=document.getElementById('taa-'+recId);
+  if(cont&&cont.querySelectorAll('.toc-file-entry').length>=1){
+    toast('⚠ Only one allowed_amount_file is permitted per plan.');return;
+  }
+  var btn=document.getElementById('taabtn-'+recId);if(btn)btn.style.display='none';
+  addTF(recId,'aa',d);
+}
+
+function rmTF(fid,recId,type){
+  var e=document.getElementById('tf-'+fid);if(e)e.remove();
+  if(type==='aa'){var btn=document.getElementById('taabtn-'+recId);if(btn)btn.style.display='';}
+}
+
+function checkURL(fid,val){
+  var hint=document.getElementById('tfh-'+fid);if(!hint)return;
+  if(!val){hint.style.display='none';return;}
+  hint.style.display='block';
+  var ok=val.indexOf('https://')===0;
+  hint.style.color=ok?'var(--green)':'var(--red)';
+  hint.textContent=ok?'✓ Valid https:// URL':'✗ Must start with https://';
+}
+
+// ─── GENERATE TOC ────────────────────────────────────────────────────────────
+function genTOC(){
+  clearErr('toc');
+  var entity=gv('th-ename');if(!entity){showErr('toc','Reporting entity name is required.');return;}
+  var upd=gv('th-date')||new Date().toISOString().split('T')[0];
+  if(!RS.toc.length){showErr('toc','Add at least one reporting structure record.');return;}
+
+  var rs=[];
+  for(var ti=0;ti<RS.toc.length;ti++){
+    var rid=RS.toc[ti];var R='Record '+(ti+1)+': ';
+    var pname=gv('tpn-'+rid);var planid=gv('tpid-'+rid);var idtype=gv('tpit-'+rid)||'ein';
+    var sponsor=gv('tpsp-'+rid);var issuer=gv('tpis-'+rid);var mkt=gv('tpmt-'+rid)||'individual';
+    if(!pname){showErr('toc',R+'Plan name is required.');return;}
+    if(!planid){showErr('toc',R+'Plan ID is required.');return;}
+    if(!issuer){showErr('toc',R+'Issuer name is required (CMS schema).');return;}
+    if(idtype==='ein'&&!sponsor){showErr('toc',R+'Plan sponsor name is required when Plan ID type is "ein".');return;}
+
+    var plan={plan_name:pname,plan_id_type:idtype,plan_id:planid,plan_market_type:mkt,issuer_name:issuer};
+    if(sponsor)plan.plan_sponsor_name=sponsor;
+
+    // in_network_files — each entry that exists MUST have both description and location
+    var innCont=document.getElementById('tinn-'+rid);
+    var innFiles=[];
+    if(innCont){
+      var iEntries=innCont.querySelectorAll('.toc-file-entry');
+      for(var ii=0;ii<iEntries.length;ii++){
+        var fid=iEntries[ii].id.replace('tf-','');
+        var descEl=document.getElementById('tfd-'+fid);var locEl=document.getElementById('tfl-'+fid);
+        var dv=descEl?descEl.value.trim():'';var lv=locEl?locEl.value.trim():'';
+        // entry exists — both fields are required
+        if(!lv){
+          // highlight the empty field
+          if(locEl){locEl.style.borderColor='var(--danger)';locEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'in_network_files entry '+(ii+1)+': Location URL is required. Must start with https://');return;
+        }
+        if(!dv){
+          if(descEl){descEl.style.borderColor='var(--danger)';descEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'in_network_files entry '+(ii+1)+': Description is required.');return;
+        }
+        if(lv.indexOf('https://')!==0){
+          if(locEl){locEl.style.borderColor='var(--danger)';locEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'in_network_files entry '+(ii+1)+': URL must start with https:// — got: "'+lv+'"');return;
+        }
+        // reset highlight if valid
+        if(locEl){locEl.style.borderColor='';locEl.style.boxShadow='';}
+        if(descEl){descEl.style.borderColor='';descEl.style.boxShadow='';}
+        innFiles.push({description:dv,location:lv});
+      }
+    }
+
+    // allowed_amount_file — if entry div exists, both fields are required
+    var aaCont=document.getElementById('taa-'+rid);
+    var aaFile=null;
+    if(aaCont){
+      var aEntries=aaCont.querySelectorAll('.toc-file-entry');
+      if(aEntries.length){
+        var fid2=aEntries[0].id.replace('tf-','');
+        var adescEl=document.getElementById('tfd-'+fid2);var alocEl=document.getElementById('tfl-'+fid2);
+        var adv=adescEl?adescEl.value.trim():'';var alv=alocEl?alocEl.value.trim():'';
+        // entry exists — location is required
+        if(!alv){
+          if(alocEl){alocEl.style.borderColor='var(--danger)';alocEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'allowed_amount_file: Location URL is required. Must start with https://');return;
+        }
+        if(!adv){
+          if(adescEl){adescEl.style.borderColor='var(--danger)';adescEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'allowed_amount_file: Description is required.');return;
+        }
+        if(alv.indexOf('https://')!==0){
+          if(alocEl){alocEl.style.borderColor='var(--danger)';alocEl.style.boxShadow='0 0 0 3px rgba(185,28,28,.1)';}
+          showErr('toc',R+'allowed_amount_file: URL must start with https:// — got: "'+alv+'"');return;
+        }
+        if(alocEl){alocEl.style.borderColor='';alocEl.style.boxShadow='';}
+        if(adescEl){adescEl.style.borderColor='';adescEl.style.boxShadow='';}
+        aaFile={description:adv,location:alv};
+      }
+    }
+
+    // CMS anyOf rule: at least one of in_network_files or allowed_amount_file must be present
+    if(!innFiles.length&&!aaFile){showErr('toc',R+'At least one file URL is required — add an in-network file URL or an allowed amount file URL (CMS anyOf rule).');return;}
+    var entry={reporting_plans:[plan]};
+    if(innFiles.length)entry.in_network_files=innFiles;
+    if(aaFile)entry.allowed_amount_file=aaFile;
+    rs.push(entry);
+  }
+
+  var result={reporting_entity_name:entity,reporting_entity_type:gv('th-etype'),version:gv('th-ver')||'2.0.0',last_updated_on:upd,reporting_structure:rs};
+  GEN.toc=result;
+  var ename=(entity||'issuer').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'').toLowerCase();
+  showResult('toc',result,upd,ename,'index','index');
+}
+
+// ─── RESULT / DOWNLOAD / COPY ────────────────────────────────────────────────
+var GEN={inn:null,aa:null,toc:null};
+var DLNAMES={inn:'output.json',aa:'output.json',toc:'output.json'};
+
+// Per-scope download sequence counter — resets on page load
+// gives v1, v2, v3... when the same file type is downloaded multiple times per day
+var SEQ={inn:0,aa:0,toc:0};
+function getSeq(scope){SEQ[scope]=(SEQ[scope]||0)+1;return SEQ[scope];}
+
+function showResult(scope,data,date,issuer,plan,suffix){
+  var iss=(issuer||'issuer').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'').toLowerCase()||'issuer';
+  var pl=(plan||scope).replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'').toLowerCase()||scope;
+  var now=new Date();
+  var today=now.toISOString().split('T')[0];
+  var hh=pad2(now.getHours());
+  var mm=pad2(now.getMinutes());
+  var ss=pad2(now.getSeconds());
+  var seq=getSeq(scope);
+  var fname=today+'_'+hh+mm+ss+'_v'+seq+'_'+iss+'_'+pl+'_'+suffix+'.json';
+  DLNAMES[scope]=fname;
+  document.getElementById('pf-'+scope).textContent=fname;
+  document.getElementById('pc-'+scope).textContent=JSON.stringify(data,null,2);
+  document.getElementById('pw-'+scope).style.display='block';
+  var dl=document.getElementById('dl-'+scope);
+  dl.style.display='inline-flex';dl.textContent='↓ '+fname;
+  setCount(scope,RS[scope].length,true);
+  toast('✓ JSON generated — '+RS[scope].length+' record(s)');
+  runValidation(scope,data);
+}
+
+function dlFile(scope){
+  var data=GEN[scope];if(!data)return;
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=DLNAMES[scope];
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('✓ Downloaded: '+DLNAMES[scope]);
+}
+
+function copyJ(scope){
+  var data=GEN[scope];if(!data)return;
+  navigator.clipboard.writeText(JSON.stringify(data,null,2)).then(function(){toast('✓ JSON copied to clipboard');});
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function clearScope(scope){
+  RS[scope]=[];ACTIVE[scope]=null;GEN[scope]=null;
+  document.getElementById(scope+'-bar').innerHTML='';
+  document.getElementById(scope+'-recs').innerHTML='';
+  var _pw=document.getElementById('pw-'+scope);if(_pw)_pw.style.display='none';
+  var _vw=document.getElementById('vw-'+scope);if(_vw)_vw.style.display='none';
+  document.getElementById('dl-'+scope).style.display='none';
+  clearErr(scope);setCount(scope,'–',false);
+}
+function rstINN(){PROVS=[];document.getElementById('inn-provs').innerHTML='';clearScope('inn');initINN();}
+function rstAA(){clearScope('aa');initAA();}
+function rstTOC(){clearScope('toc');initTOC();}
+
+// ─── FULL SCHEMA VALIDATOR ──────────────────────────────────────────────────
+// Implements JSON Schema draft-04 covering every field in the 3 CMS schemas
+
+var DRG_TYPES=['MS-DRG','R-DRG','S-DRG','APS-DRG','AP-DRG','APR-DRG'];
+
+var BILLING_CODE_TYPES=['CPT','HCPCS','ICD','MS-DRG','R-DRG','S-DRG','APS-DRG','AP-DRG','APR-DRG','APC','NDC','HIPPS','LOCAL','EAPG','CDT','RC','CSTM-ALL'];
+var BILLING_CODE_TYPES_AA=['CPT','HCPCS','ICD','MS-DRG','R-DRG','S-DRG','APS-DRG','AP-DRG','APR-DRG','APC','NDC','HIPPS','LOCAL','EAPG','CDT','RC'];
+var NEG_TYPES_ENUM=['negotiated','derived','fee schedule','percentage','per diem'];
+var NEG_ARR_ENUM=['ffs','bundle','capitation'];
+var BCLASS_INN_ENUM=['professional','institutional','both'];
+var BCLASS_AA_ENUM=['professional','institutional'];
+var SETTING_INN_ENUM=['inpatient','outpatient','both'];
+var SETTING_AA_ENUM=['inpatient','outpatient'];
+var PLAN_ID_TYPE_ENUM=['ein','hios'];
+var PLAN_MKT_ENUM=['group','individual'];
+var TIN_TYPE_ENUM=['ein','npi'];
+var DATE_PATTERN=/^\d{4}-\d{2}-\d{2}$/;
+var SVC_PATTERN=/^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$/;
+var EIN_PATTERN=/^\d{2}-?\d{7}$/;
+
+function runValidation(scope, data){
+  if(!data){
+    var vw0=document.getElementById('vw-'+scope);if(vw0)vw0.style.display='block';
+    var vh0=document.getElementById('vh-'+scope);
+    if(vh0){vh0.className='val-head warn';vh0.innerHTML='&#9888; Generate JSON first, then validate.';}
+    return;
+  }
+
+  var errs=[];var pass=[];
+
+  function ok(label,detail){pass.push({label:label,detail:String(detail!==undefined?detail:'')});}
+  function fail(label,detail){errs.push({label:label,detail:String(detail!==undefined?detail:'')});}
+
+  function chkRequired(obj,field,path){
+    if(obj[field]===undefined||obj[field]===null||obj[field]===''){
+      fail(path+'.'+field,'MISSING — field is required');return false;
+    }
+    return true;
+  }
+  function chkString(obj,field,path,minLen){
+    if(obj[field]===undefined)return;
+    if(typeof obj[field]!=='string'){fail(path+'.'+field,'Must be a string, got: '+typeof obj[field]);return;}
+    if(minLen&&obj[field].length<minLen){fail(path+'.'+field,'minLength: '+minLen+', got length: '+obj[field].length+' ("'+obj[field]+'")');return;}
+    ok(path+'.'+field,'"'+obj[field]+'"');
+  }
+  function chkEnum(obj,field,path,allowed){
+    if(obj[field]===undefined)return;
+    if(allowed.indexOf(obj[field])===-1){fail(path+'.'+field,'Value "'+obj[field]+'" not in allowed: ['+allowed.join(', ')+']');}
+    else ok(path+'.'+field,'"'+obj[field]+'"');
+  }
+  function chkNumber(obj,field,path,min){
+    if(obj[field]===undefined)return;
+    if(typeof obj[field]!=='number'){fail(path+'.'+field,'Must be a number, got: '+typeof obj[field]+' ('+obj[field]+')');return;}
+    if(min!==undefined&&obj[field]<min){fail(path+'.'+field,'Must be >= '+min+', got: '+obj[field]);return;}
+    ok(path+'.'+field,obj[field]);
+  }
+  function chkInteger(obj,field,path){
+    if(obj[field]===undefined)return;
+    if(typeof obj[field]!=='number'||obj[field]!==Math.floor(obj[field])){fail(path+'.'+field,'Must be an integer, got: '+obj[field]);}
+    else ok(path+'.'+field,obj[field]);
+  }
+  function chkDate(obj,field,path){
+    if(obj[field]===undefined)return;
+    if(!DATE_PATTERN.test(obj[field])){fail(path+'.'+field,'Must match YYYY-MM-DD, got: "'+obj[field]+'"');}
+    else ok(path+'.'+field,'"'+obj[field]+'"');
+  }
+  function chkPattern(val,pattern,label,path){
+    if(!pattern.test(val)){fail(path,'Value "'+val+'" does not match required pattern');return false;}
+    ok(path,'"'+val+'"');return true;
+  }
+  function chkArray(obj,field,path,minItems){
+    if(obj[field]===undefined)return false;
+    if(!Array.isArray(obj[field])){fail(path+'.'+field,'Must be an array');return false;}
+    if(minItems&&obj[field].length<minItems){fail(path+'.'+field,'minItems: '+minItems+', got: '+obj[field].length);return false;}
+    ok(path+'.'+field,'Array with '+obj[field].length+' item(s)');return true;
+  }
+  function chkUnique(arr,path){
+    var seen={};var dups=[];
+    arr.forEach(function(v,i){var k=JSON.stringify(v);if(seen[k]!==undefined)dups.push(i);else seen[k]=i;});
+    if(dups.length){fail(path,'Duplicate items at indices: '+dups.join(', '));}
+    else ok(path,'All items unique');
+  }
+
+  // ── ROOT REQUIRED ──
+  function chkRootRequired(d,fields,path){
+    fields.forEach(function(f){
+      if(d[f]===undefined||d[f]===null||d[f]==='')fail(path+'.'+f,'MISSING — required field');
+    });
+  }
+
+  // ── PLAN DEPENDENCY CHECK ──
+  // If any of plan_name/plan_id_type/plan_id/plan_market_type/issuer_name is present,
+  // all of them must be present (dependency rule from schema)
+  function chkPlanDependency(d,path){
+    var planFields=['plan_name','plan_id_type','plan_id','plan_market_type','issuer_name'];
+    var present=planFields.filter(function(f){return d[f]!==undefined&&d[f]!==null&&d[f]!=='';});
+    if(present.length>0&&present.length<planFields.length){
+      var missing=planFields.filter(function(f){return d[f]===undefined||d[f]===null||d[f]==='';});
+      fail(path+' — plan dependencies','When any plan field is present, all must be present. Missing: '+missing.join(', '));
+    } else if(present.length===planFields.length){
+      ok(path+' — plan dependencies','All plan fields present: '+present.join(', '));
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // IN-NETWORK SCHEMA VALIDATION
+  // ═══════════════════════════════════════════════════════
+  function validateINN(d){
+    var P='#';
+
+    // root required
+    ['reporting_entity_name','reporting_entity_type','last_updated_on','in_network','version'].forEach(function(f){
+      if(d[f]===undefined||d[f]===null||d[f]==='')fail(P+'.'+f,'MISSING — required by schema');
+    });
+
+    // root string fields
+    chkString(d,'reporting_entity_name',P,1);
+    chkString(d,'reporting_entity_type',P,1);
+    chkString(d,'version',P,1);
+    chkDate(d,'last_updated_on',P);
+
+    // optional plan fields
+    if(d.plan_name!==undefined)chkString(d,'plan_name',P,1);
+    if(d.issuer_name!==undefined)chkString(d,'issuer_name',P,1);
+    if(d.plan_sponsor_name!==undefined)chkString(d,'plan_sponsor_name',P,1);
+    if(d.plan_id!==undefined)chkString(d,'plan_id',P,1);
+    if(d.plan_id_type!==undefined)chkEnum(d,'plan_id_type',P,PLAN_ID_TYPE_ENUM);
+    if(d.plan_market_type!==undefined)chkEnum(d,'plan_market_type',P,PLAN_MKT_ENUM);
+
+    // plan dependency
+    chkPlanDependency(d,P);
+
+    // anyOf: plan_id_type=ein requires plan_sponsor_name
+    if(d.plan_id_type==='ein'){
+      if(!d.plan_sponsor_name){fail(P+'.plan_sponsor_name','MISSING — required when plan_id_type is "ein" (anyOf rule)');}
+      else ok(P+'.plan_sponsor_name — ein requires this','"'+d.plan_sponsor_name+'"');
+    }
+
+    // provider_references
+    if(chkArray(d,'provider_references',P,1)){
+      d.provider_references.forEach(function(pr,i){
+        var pp=P+'.provider_references['+i+']';
+        ['provider_group_id','provider_groups','network_name'].forEach(function(f){
+          if(pr[f]===undefined)fail(pp+'.'+f,'MISSING — required');
+        });
+        chkInteger(pr,'provider_group_id',pp);
+        // network_name array of strings
+        if(Array.isArray(pr.network_name)){
+          pr.network_name.forEach(function(n,ni){
+            if(typeof n!=='string'||n.length<1)fail(pp+'.network_name['+ni+']','Must be non-empty string, got: '+JSON.stringify(n));
+            else ok(pp+'.network_name['+ni+']','"'+n+'"');
+          });
+        }
+        // provider_groups
+        if(chkArray(pr,'provider_groups',pp,1)){
+          pr.provider_groups.forEach(function(pg,pgi){
+            var pgp=pp+'.provider_groups['+pgi+']';
+            ['npi','tin'].forEach(function(f){if(pg[f]===undefined)fail(pgp+'.'+f,'MISSING — required');});
+            // npi array
+            if(chkArray(pg,'npi',pgp,1)){
+              pg.npi.forEach(function(n,ni){
+                if(typeof n!=='number'){fail(pgp+'.npi['+ni+']','Must be a number, got: '+typeof n);}
+                else if(!/^[1-9]\d{9}$/.test(String(Math.floor(n)))){fail(pgp+'.npi['+ni+']','NPI must be 10-digit number starting 1-9, got: '+n);}
+                else ok(pgp+'.npi['+ni+']',n);
+              });
+              chkUnique(pg.npi,pgp+'.npi — uniqueItems');
+            }
+            // tin
+            if(pg.tin){
+              var tp=pgp+'.tin';
+              ['type','value'].forEach(function(f){if(pg.tin[f]===undefined)fail(tp+'.'+f,'MISSING — required');});
+              chkEnum(pg.tin,'type',tp,TIN_TYPE_ENUM);
+              chkString(pg.tin,'value',tp,1);
+              // tin value pattern
+              if(pg.tin.value&&!EIN_PATTERN.test(pg.tin.value)){fail(tp+'.value — pattern','Value "'+pg.tin.value+'" does not match \\d{2}-?\\d{7}');}
+              else if(pg.tin.value)ok(tp+'.value — pattern','"'+pg.tin.value+'"');
+              // anyOf: ein requires business_name
+              if(pg.tin.type==='ein'){
+                if(!pg.tin.business_name){fail(tp+'.business_name','MISSING — required when tin.type is "ein"');}
+                else{chkString(pg.tin,'business_name',tp,1);}
+              }
+              if(pg.tin.business_name!==undefined&&pg.tin.type!=='ein'){
+                ok(tp+'.business_name — optional for npi','"'+pg.tin.business_name+'"');
+              }
+            }
+          });
+        }
+      });
+    }
+
+    // in_network array
+    if(chkArray(d,'in_network',P,1)){
+      d.in_network.forEach(function(item,i){
+        var ip=P+'.in_network['+i+']';
+        // required fields
+        ['negotiation_arrangement','name','billing_code_type','billing_code_type_version','billing_code','negotiated_rates','description'].forEach(function(f){
+          if(item[f]===undefined||item[f]===null||item[f]==='')fail(ip+'.'+f,'MISSING — required');
+        });
+        chkEnum(item,'negotiation_arrangement',ip,NEG_ARR_ENUM);
+        chkString(item,'name',ip,1);
+        chkEnum(item,'billing_code_type',ip,BILLING_CODE_TYPES);
+        chkString(item,'billing_code_type_version',ip,1);
+        chkString(item,'billing_code',ip,1);
+        chkString(item,'description',ip,1);
+        // severity_of_illness optional (string if present)
+        if(item.severity_of_illness!==undefined)chkString(item,'severity_of_illness',ip,1);
+        // DRG business rule: severity required
+        if(DRG_TYPES.indexOf(item.billing_code_type)!==-1){
+          if(!item.severity_of_illness){fail(ip+'.severity_of_illness','MISSING — required when billing_code_type is "'+item.billing_code_type+'" (DRG type)');}
+          else ok(ip+'.severity_of_illness — DRG requirement','"'+item.severity_of_illness+'"');
+        }
+        // negotiated_rates
+        if(chkArray(item,'negotiated_rates',ip,1)){
+          item.negotiated_rates.forEach(function(nr,ni){
+            var np=ip+'.negotiated_rates['+ni+']';
+            ['provider_references','negotiated_prices'].forEach(function(f){
+              if(nr[f]===undefined)fail(np+'.'+f,'MISSING — required');
+            });
+            if(chkArray(nr,'provider_references',np,1)){
+              nr.provider_references.forEach(function(ref,ri){
+                if(typeof ref!=='number'){fail(np+'.provider_references['+ri+']','Must be a number, got: '+typeof ref);}
+                else ok(np+'.provider_references['+ri+']',ref);
+              });
+              chkUnique(nr.provider_references,np+'.provider_references — uniqueItems');
+            }
+            if(chkArray(nr,'negotiated_prices',np,1)){
+              chkUnique(nr.negotiated_prices,np+'.negotiated_prices — uniqueItems');
+              nr.negotiated_prices.forEach(function(price,pi){
+                var pp=np+'.negotiated_prices['+pi+']';
+                ['negotiated_type','billing_class','negotiated_rate','expiration_date','setting'].forEach(function(f){
+                  if(price[f]===undefined)fail(pp+'.'+f,'MISSING — required');
+                });
+                chkEnum(price,'negotiated_type',pp,NEG_TYPES_ENUM);
+                chkEnum(price,'billing_class',pp,BCLASS_INN_ENUM);
+                chkEnum(price,'setting',pp,SETTING_INN_ENUM);
+                chkNumber(price,'negotiated_rate',pp,0);
+                chkDate(price,'expiration_date',pp);
+                // anyOf: professional requires service_code
+                if(price.billing_class==='professional'){
+                  if(!price.service_code||!price.service_code.length){fail(pp+'.service_code','MISSING — required when billing_class is "professional" (anyOf rule)');}
+                  else ok(pp+'.service_code — professional requirement',price.service_code.join(', '));
+                }
+                // service_code items pattern
+                if(price.service_code){
+                  if(!Array.isArray(price.service_code)){fail(pp+'.service_code','Must be an array');}
+                  else{
+                    chkUnique(price.service_code,pp+'.service_code — uniqueItems');
+                    price.service_code.forEach(function(sc,si){
+                      if(!SVC_PATTERN.test(sc)){fail(pp+'.service_code['+si+']','Value "'+sc+'" must match ^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$');}
+                      else ok(pp+'.service_code['+si+']','"'+sc+'"');
+                    });
+                  }
+                }
+                // billing_code_modifier optional
+                if(price.billing_code_modifier!==undefined){
+                  if(chkArray(price,'billing_code_modifier',pp,1)){
+                    chkUnique(price.billing_code_modifier,pp+'.billing_code_modifier — uniqueItems');
+                    price.billing_code_modifier.forEach(function(m,mi){
+                      if(typeof m!=='string')fail(pp+'.billing_code_modifier['+mi+']','Must be string');
+                      else ok(pp+'.billing_code_modifier['+mi+']','"'+m+'"');
+                    });
+                  }
+                }
+                // additional_information optional
+                if(price.additional_information!==undefined)chkString(price,'additional_information',pp,1);
+                // business rule: inpatient + professional invalid
+                if(price.setting==='inpatient'&&price.billing_class==='professional'){
+                  fail(pp+' — CMS rule','setting "inpatient" is incompatible with billing_class "professional"');
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ALLOWED AMOUNTS SCHEMA VALIDATION
+  // ═══════════════════════════════════════════════════════
+  function validateAA(d){
+    var P='#';
+    ['reporting_entity_name','reporting_entity_type','last_updated_on','out_of_network','version'].forEach(function(f){
+      if(d[f]===undefined||d[f]===null||d[f]==='')fail(P+'.'+f,'MISSING — required by schema');
+    });
+    chkString(d,'reporting_entity_name',P,1);
+    chkString(d,'reporting_entity_type',P,1);
+    chkString(d,'version',P,1);
+    chkDate(d,'last_updated_on',P);
+    if(d.plan_name!==undefined)chkString(d,'plan_name',P,1);
+    if(d.issuer_name!==undefined)chkString(d,'issuer_name',P,1);
+    if(d.plan_sponsor_name!==undefined)chkString(d,'plan_sponsor_name',P,1);
+    if(d.plan_id!==undefined)chkString(d,'plan_id',P,1);
+    if(d.plan_id_type!==undefined)chkEnum(d,'plan_id_type',P,PLAN_ID_TYPE_ENUM);
+    if(d.plan_market_type!==undefined)chkEnum(d,'plan_market_type',P,PLAN_MKT_ENUM);
+    chkPlanDependency(d,P);
+    // oneOf: ein requires plan_sponsor_name
+    if(d.plan_id_type==='ein'){
+      if(!d.plan_sponsor_name)fail(P+'.plan_sponsor_name','MISSING — required when plan_id_type is "ein" (oneOf rule)');
+      else ok(P+'.plan_sponsor_name — ein requires this','"'+d.plan_sponsor_name+'"');
+    }
+    if(chkArray(d,'out_of_network',P,1)){
+      d.out_of_network.forEach(function(item,i){
+        var ip=P+'.out_of_network['+i+']';
+        ['name','billing_code_type','billing_code_type_version','billing_code','allowed_amounts','description'].forEach(function(f){
+          if(item[f]===undefined||item[f]===null||item[f]==='')fail(ip+'.'+f,'MISSING — required');
+        });
+        chkString(item,'name',ip,1);
+        chkEnum(item,'billing_code_type',ip,BILLING_CODE_TYPES_AA);
+        chkString(item,'billing_code_type_version',ip,1);
+        chkString(item,'billing_code',ip,1);
+        chkString(item,'description',ip,1);
+        if(chkArray(item,'allowed_amounts',ip,1)){
+          item.allowed_amounts.forEach(function(aa,ai){
+            var ap=ip+'.allowed_amounts['+ai+']';
+            ['tin','billing_class','setting','payments'].forEach(function(f){
+              if(aa[f]===undefined)fail(ap+'.'+f,'MISSING — required');
+            });
+            chkEnum(aa,'billing_class',ap,BCLASS_AA_ENUM);
+            chkEnum(aa,'setting',ap,SETTING_AA_ENUM);
+            // anyOf: professional requires service_code
+            if(aa.billing_class==='professional'){
+              if(!aa.service_code||!aa.service_code.length)fail(ap+'.service_code','MISSING — required when billing_class is "professional" (anyOf rule)');
+              else ok(ap+'.service_code — professional requirement',aa.service_code.join(', '));
+            }
+            // service_code items
+            if(aa.service_code){
+              if(!Array.isArray(aa.service_code)){fail(ap+'.service_code','Must be an array');}
+              else{
+                chkUnique(aa.service_code,ap+'.service_code — uniqueItems');
+                aa.service_code.forEach(function(sc,si){
+                  if(!SVC_PATTERN.test(sc))fail(ap+'.service_code['+si+']','Value "'+sc+'" must match ^([1-9][0-9]|[0-9][1-9])$');
+                  else ok(ap+'.service_code['+si+']','"'+sc+'"');
+                });
+              }
+            }
+            // tin
+            if(aa.tin){
+              var tp=ap+'.tin';
+              ['type','value'].forEach(function(f){if(!aa.tin[f])fail(tp+'.'+f,'MISSING — required');});
+              chkEnum(aa.tin,'type',tp,TIN_TYPE_ENUM);
+              chkString(aa.tin,'value',tp,1);
+              // EIN pattern check (same as INN schema)
+              if(aa.tin.type==='ein'&&aa.tin.value){
+                if(!EIN_PATTERN.test(aa.tin.value))fail(tp+'.value — pattern','Value "'+aa.tin.value+'" does not match \d{2}-?\d{7}');
+                else ok(tp+'.value — pattern','"'+aa.tin.value+'"');
+              }
+            }
+            // payments
+            if(chkArray(aa,'payments',ap,1)){
+              aa.payments.forEach(function(pay,pi){
+                var pp2=ap+'.payments['+pi+']';
+                ['allowed_amount','providers'].forEach(function(f){
+                  if(pay[f]===undefined)fail(pp2+'.'+f,'MISSING — required');
+                });
+                chkNumber(pay,'allowed_amount',pp2,0);
+                if(pay.billing_code_modifier!==undefined){
+                  if(chkArray(pay,'billing_code_modifier',pp2,1)){
+                    chkUnique(pay.billing_code_modifier,pp2+'.billing_code_modifier — uniqueItems');
+                    pay.billing_code_modifier.forEach(function(m,mi){
+                      if(typeof m!=='string')fail(pp2+'.billing_code_modifier['+mi+']','Must be string, minLength 1');
+                    });
+                  }
+                }
+                if(chkArray(pay,'providers',pp2,1)){
+                  pay.providers.forEach(function(prov,pri){
+                    var prp=pp2+'.providers['+pri+']';
+                    ['billed_charge','npi'].forEach(function(f){
+                      if(prov[f]===undefined)fail(prp+'.'+f,'MISSING — required');
+                    });
+                    chkNumber(prov,'billed_charge',prp,0);
+                    if(chkArray(prov,'npi',prp,1)){
+                      chkUnique(prov.npi,prp+'.npi — uniqueItems');
+                      prov.npi.forEach(function(n,ni){
+                        if(typeof n!=='number')fail(prp+'.npi['+ni+']','Must be integer, got: '+typeof n);
+                        else if(!/^[1-9]\d{9}$/.test(String(Math.floor(n))))fail(prp+'.npi['+ni+']','Invalid NPI: '+n);
+                        else ok(prp+'.npi['+ni+']',n);
+                      });
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // TABLE OF CONTENTS SCHEMA VALIDATION
+  // ═══════════════════════════════════════════════════════
+  function validateTOC(d){
+    var P='#';
+    ['reporting_entity_name','reporting_entity_type','reporting_structure','last_updated_on','version'].forEach(function(f){
+      if(d[f]===undefined||d[f]===null||d[f]==='')fail(P+'.'+f,'MISSING — required by schema');
+    });
+    chkString(d,'reporting_entity_name',P,1);
+    chkString(d,'reporting_entity_type',P,1);
+    chkString(d,'version',P,1);
+    chkDate(d,'last_updated_on',P);
+    if(chkArray(d,'reporting_structure',P,1)){
+      chkUnique(d.reporting_structure,P+'.reporting_structure — uniqueItems');
+      d.reporting_structure.forEach(function(rs,i){
+        var rp=P+'.reporting_structure['+i+']';
+        // required: reporting_plans
+        if(!rs.reporting_plans)fail(rp+'.reporting_plans','MISSING — required');
+        // anyOf: must have in_network_files OR allowed_amount_file
+        var hasINN=!!(rs.in_network_files&&rs.in_network_files.length);
+        var hasAA=!!rs.allowed_amount_file;
+        if(!hasINN&&!hasAA)fail(rp+' — anyOf','Must have at least one of: in_network_files or allowed_amount_file');
+        else ok(rp+' — anyOf (files present)',hasINN&&hasAA?'both present':hasINN?'in_network_files present':'allowed_amount_file present');
+        // reporting_plans
+        if(chkArray(rs,'reporting_plans',rp,1)){
+          chkUnique(rs.reporting_plans,rp+'.reporting_plans — uniqueItems');
+          rs.reporting_plans.forEach(function(plan,pi){
+            var pp=rp+'.reporting_plans['+pi+']';
+            ['plan_name','plan_id_type','plan_id','plan_market_type','issuer_name'].forEach(function(f){
+              if(!plan[f])fail(pp+'.'+f,'MISSING — required');
+            });
+            chkString(plan,'plan_name',pp,1);
+            chkEnum(plan,'plan_id_type',pp,PLAN_ID_TYPE_ENUM);
+            chkString(plan,'plan_id',pp,1);
+            chkEnum(plan,'plan_market_type',pp,PLAN_MKT_ENUM);
+            chkString(plan,'issuer_name',pp,1);
+            if(plan.plan_sponsor_name!==undefined)chkString(plan,'plan_sponsor_name',pp,1);
+            // oneOf: ein requires plan_sponsor_name
+            if(plan.plan_id_type==='ein'){
+              if(!plan.plan_sponsor_name)fail(pp+'.plan_sponsor_name','MISSING — required when plan_id_type is "ein" (oneOf rule)');
+              else ok(pp+'.plan_sponsor_name — ein requires this','"'+plan.plan_sponsor_name+'"');
+            }
+          });
+        }
+        // in_network_files (array of file_location)
+        if(rs.in_network_files){
+          if(chkArray(rs,'in_network_files',rp,1)){
+            chkUnique(rs.in_network_files,rp+'.in_network_files — uniqueItems');
+            rs.in_network_files.forEach(function(f,fi){
+              var fp=rp+'.in_network_files['+fi+']';
+              ['description','location'].forEach(function(field){
+                if(!f[field])fail(fp+'.'+field,'MISSING — required');
+              });
+              if(f.description)chkString(f,'description',fp,1);
+              if(f.location){
+                chkString(f,'location',fp,1);
+                if(!/^https:\/\//.test(f.location))fail(fp+'.location — uri pattern','Must start with https://, got: "'+f.location+'"');
+                else ok(fp+'.location — uri pattern','https:// ✓');
+              }
+            });
+          }
+        }
+        // allowed_amount_file (single file_location object)
+        if(rs.allowed_amount_file){
+          var afp=rp+'.allowed_amount_file';
+          ['description','location'].forEach(function(field){
+            if(!rs.allowed_amount_file[field])fail(afp+'.'+field,'MISSING — required');
+          });
+          if(rs.allowed_amount_file.description)chkString(rs.allowed_amount_file,'description',afp,1);
+          if(rs.allowed_amount_file.location){
+            chkString(rs.allowed_amount_file,'location',afp,1);
+            if(!/^https:\/\//.test(rs.allowed_amount_file.location))fail(afp+'.location — uri pattern','Must start with https://');
+            else ok(afp+'.location — uri pattern','https:// ✓');
+          }
+        }
+      });
+    }
+  }
+
+  // run the right validator
+  if(scope==='inn')validateINN(data);
+  else if(scope==='aa')validateAA(data);
+  else if(scope==='toc')validateTOC(data);
+
+  // ── render validation results ──
+  var totalFail=errs.length;var totalPass=pass.length;var total=totalFail+totalPass;
+  var vw=document.getElementById('vw-'+scope);vw.style.display='block';
+  var vh=document.getElementById('vh-'+scope);
+  var vt=document.getElementById('vt-'+scope);
+  var vb=document.getElementById('vb-'+scope);
+
+  // banner
+  var chkSvg='<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  var errSvg='<svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  if(totalFail===0){
+    vh.className='val-head pass';
+    vh.innerHTML=chkSvg+' All '+total+' checks passed \u2014 JSON is valid against CMS schema.';
+  } else {
+    vh.className='val-head fail';
+    vh.innerHTML=errSvg+' '+totalFail+' error'+(totalFail>1?'s':'')+' found \u2014 '+totalPass+' of '+total+' checks passed.';
+  }
+
+  // toolbar
+  var errPill=totalFail>0?'<span class="vpill err">\u2717 '+totalFail+' error'+(totalFail>1?'s':'')+'</span>':'';
+  vt.innerHTML=
+    '<div class="val-pills">'+errPill
+    +'<span class="vpill ok">\u2713 '+totalPass+' passed</span>'
+    +'<span class="vpill tot">'+total+' total</span>'
+    +'</div>'
+    +'<button class="val-toggle" id="vtbtn-'+scope+'" onclick="togglePassRows(\''+scope+'\')" data-on="0">'
+    +'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+    +' Show passed</button>';
+
+  // categorise
+  function catOf(label){
+    if(/plan_|issuer_|sponsor|reporting_entity|version|last_updated|plan dep/.test(label))return'File header';
+    if(/provider_references/.test(label))return'Provider references';
+    if(/in_network\[/.test(label))return'in_network records';
+    if(/out_of_network\[/.test(label))return'out_of_network records';
+    if(/reporting_structure\[|reporting_plans|in_network_files|allowed_amount_file/.test(label))return'reporting_structure records';
+    return'Other';
+  }
+  var passCats={},failCats={},allCats=[],seenCats={};
+  errs.forEach(function(r){var c=catOf(r.label);if(!failCats[c])failCats[c]=[];failCats[c].push(r);if(!seenCats[c]){seenCats[c]=1;allCats.push(c);}});
+  pass.forEach(function(r){var c=catOf(r.label);if(!passCats[c])passCats[c]=[];passCats[c].push(r);if(!seenCats[c]){seenCats[c]=1;allCats.push(c);}});
+
+  // build HTML
+  var chevSvg='<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+  var tickSvg='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+  var html='';var gid=0;
+  allCats.forEach(function(cat){
+    var fe=failCats[cat]||[];var pe=passCats[cat]||[];
+    var hasErr=fe.length>0;
+    var gidStr='vg-'+scope+'-'+(gid++);
+    var open=hasErr;
+    html+='<div class="val-grp">';
+    html+='<div class="val-grp-hdr" onclick="toggleValGrp(\''+gidStr+'\')">';
+    html+='<span class="val-grp-lbl">'+escH(cat)+'</span>';
+    if(hasErr)html+='<span class="val-grp-cnt err">'+fe.length+' error'+(fe.length>1?'s':'')+'</span>';
+    html+='<span class="val-grp-cnt ok" style="margin-left:'+(hasErr?'6px':'auto')+'">'+pe.length+' passed</span>';
+    html+='<span class="val-chev'+(open?' open':'')+'" id="chev-'+gidStr+'">'+chevSvg+'</span>';
+    html+='</div>';
+    html+='<div class="val-grp-body'+(open?' open':'')+'" id="'+gidStr+'">';
+    fe.forEach(function(r){
+      html+='<div class="val-fail-row">'
+        +'<div class="val-fi">!</div>'
+        +'<div class="val-fb">'
+        +'<span class="val-ffield">'+escH(r.label)+'</span>'
+        +'<div class="val-fmsg">'+escH(r.detail)+'</div>'
+        +'</div></div>';
+    });
+    if(pe.length){
+      html+='<div class="val-pass-rows" id="ps-'+gidStr+'" style="display:none">';
+      pe.forEach(function(r){
+        html+='<div class="val-pass-row">'
+          +'<span class="val-pck">'+tickSvg+'</span>'
+          +'<span class="val-pf" title="'+escH(r.label)+'">'+escH(r.label)+'</span>'
+          +'<span class="val-pv">'+escH(r.detail)+'</span>'
+          +'</div>';
+      });
+      html+='</div>';
+    }
+    html+='</div></div>';
+  });
+
+  vb.innerHTML=html;
+  vw.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function toggleValGrp(id){
+  var body=document.getElementById(id);
+  var chev=document.getElementById('chev-'+id);
+  if(!body)return;
+  var open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  if(chev)chev.classList.toggle('open',!open);
+}
+
+function togglePassRows(scope){
+  var btn=document.getElementById('vtbtn-'+scope);
+  var vb=document.getElementById('vb-'+scope);
+  if(!vb||!btn)return;
+  var on=btn.getAttribute('data-on')==='1';
+  vb.querySelectorAll('.val-pass-rows').forEach(function(el){el.style.display=on?'none':'block';});
+  btn.setAttribute('data-on',on?'0':'1');
+  btn.innerHTML=on
+    ?'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Show passed'
+    :'<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hide passed';
+}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function initINN(){
+  addRecBtn('inn',buildINN,function(){return{ctype:'CPT',bclass:'institutional'};});
+  addProv({npis:'1366433195',ttype:'ein',tval:'34-1893439',biz:'Provider Group One',net:'Network A'});
+  addTab('inn',buildINN,{ctype:'CPT',code:'Q9957',ver:'2023',name:'Inj perflutren lip micros,ml',desc:'Inj perflutren lip micros,ml',negarr:'ffs',ntype:'negotiated',bclass:'institutional',setting:'outpatient',rate:'1075.5',exp:'2026-12-31',pref:'1'});
+}
+
+function initAA(){
+  addRecBtn('aa',buildAA,function(){return{ctype:'CPT',bclass:'professional'};});
+  document.getElementById('ah-date').value=new Date().toISOString().split('T')[0];
+  var rid=addTab('aa',buildAA,{ctype:'CPT',code:'99213',ver:'2023',name:'Office visit, est patient',desc:'Office or outpatient visit for established patient',ttype:'ein',tval:'34-1893439',bclass:'professional',setting:'outpatient',svc:'11',amt:'150.00'});
+  addAAP(rid,{npi:'1366433195',billed:'275.00'});
+}
+
+function initTOC(){
+  addRecBtn('toc',buildTOC,function(){return{};});
+  var rid=addTab('toc',buildTOC,{pname:'HealthCare Basic Plan12',sponsor:'HealthCare Inc.',issuer:'HealthCare Issuer',idtype:'ein',planid:rndPlanId(),mkt:'individual'});
+  addTF(rid,'inn',{description:'In-network negotiated rates for HealthCare Basic Plan',location:'https://raw.githubusercontent.com/karthic117/MRF_testdata/refs/heads/main/Innetwork_sample_upgraded.json'});
+  addTFAA(rid,{description:'Allowed amounts for out-of-network services',location:'https://raw.githubusercontent.com/karthic117/MRF_testdata/refs/heads/main/allowed_amount_billingcode.json'});
+}
+
+// bootstrap
+document.getElementById('ah-date').value=new Date().toISOString().split('T')[0];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOAD TEST RANDOM DATA GENERATOR
+// Generates CMS-compliant random records without using the tab UI
+// ══════════════════════════════════════════════════════════════════════════════
+
+var LTEST_COUNTS={inn:50,aa:50};
+
+var LTEST_MAX=10000;
+var LTEST_WARN=5000;
+
+function selCount(scope,n,btn){
+  if(btn){
+    document.querySelectorAll('#ltest-'+scope+' .cnt-btn').forEach(function(b){b.classList.remove('sel');});
+    btn.classList.add('sel');
+    LTEST_COUNTS[scope]=n;
+    document.getElementById(scope+'-custom-cnt').value='';
+  } else {
+    document.querySelectorAll('#ltest-'+scope+' .cnt-btn').forEach(function(b){b.classList.remove('sel');});
+    var custom=parseInt(document.getElementById(scope+'-custom-cnt').value)||0;
+    LTEST_COUNTS[scope]=custom>0?custom:50;
+  }
+  showLimitMsg(scope, LTEST_COUNTS[scope]);
+}
+
+function showLimitMsg(scope,n){
+  var el=document.getElementById(scope+'-limit-msg');
+  if(!el)return;
+  var approxMB=((n*750)/1024/1024).toFixed(1);
+  if(n>LTEST_MAX){
+    el.className='ltest-limit danger';
+    el.innerHTML='&#x26A0; <b>'+n.toLocaleString()+' exceeds the maximum of 10,000 records.</b> Please reduce the count. Attempting to generate more than 10,000 records may crash your browser or produce an oversized file. Estimated file size: ~'+approxMB+' MB.';
+  } else if(n>LTEST_WARN){
+    el.className='ltest-limit warn';
+    el.innerHTML='&#x26A0; <b>'+n.toLocaleString()+' records</b> — large file (~'+approxMB+' MB). This may take a few seconds to generate. Recommended limit: 10,000 records.';
+  } else {
+    el.className='ltest-limit';
+    el.style.display='none';
+    return;
+  }
+}
+
+// ── Random data pools ──
+// ── DATA POOLS — full coverage of all CMS billing code types ──
+
+// CPT
+var D_CPT=[
+  {code:'99213',name:'Office visit est patient',desc:'Office or outpatient visit established patient, moderate complexity',bclass:'professional',setting:'outpatient',svcs:['11','22']},
+  {code:'99203',name:'Office visit new patient',desc:'Office or outpatient visit new patient, moderate complexity',bclass:'professional',setting:'outpatient',svcs:['11','21']},
+  {code:'71046',name:'X-ray chest 2 views',desc:'Radiologic examination chest 2 views',bclass:'professional',setting:'outpatient',svcs:['11','22']},
+  {code:'93000',name:'ECG with interpretation',desc:'Routine electrocardiogram with at least 12 leads with interpretation and report',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'70450',name:'CT head without contrast',desc:'Computed tomography head or brain without contrast material',bclass:'institutional',setting:'outpatient'},
+  {code:'70551',name:'MRI brain without contrast',desc:'Magnetic resonance imaging brain without contrast material',bclass:'institutional',setting:'outpatient'},
+  {code:'76700',name:'Ultrasound abdomen',desc:'Ultrasonography abdomen complete real time',bclass:'institutional',setting:'outpatient'},
+  {code:'90471',name:'Vaccine admin IM',desc:'Immunization administration intramuscular',bclass:'professional',setting:'outpatient',svcs:['11','21','22']},
+  {code:'Q9957',name:'Inj perflutren lip micros',desc:'Injection perflutren lipid microspheres per ml',bclass:'institutional',setting:'outpatient'},
+  {code:'99232',name:'Subsequent hospital care',desc:'Subsequent hospital care moderate complexity per day',bclass:'professional',setting:'inpatient',svcs:['21']},
+  {code:'99291',name:'Critical care first hour',desc:'Critical care evaluation and management first 30-74 minutes',bclass:'professional',setting:'inpatient',svcs:['21','22']},
+  {code:'27447',name:'Total knee arthroplasty',desc:'Arthroplasty knee condyle and plateau medial and lateral compartments',bclass:'institutional',setting:'inpatient'},
+  {code:'43239',name:'Upper GI endoscopy biopsy',desc:'Esophagogastroduodenoscopy with biopsy single or multiple',bclass:'institutional',setting:'outpatient'},
+  {code:'45378',name:'Colonoscopy diagnostic',desc:'Colonoscopy flexible proximal to splenic flexure diagnostic',bclass:'institutional',setting:'outpatient'},
+  {code:'99385',name:'Preventive medicine new',desc:'Initial comprehensive preventive medicine evaluation new patient 18-39 years',bclass:'professional',setting:'outpatient',svcs:['11']}
+];
+
+// HCPCS
+var D_HCPCS=[
+  {code:'E1234',name:'Wheelchair accessory',desc:'Wheelchair component or accessory not otherwise specified',bclass:'professional',setting:'outpatient',svcs:['12']},
+  {code:'A4628',name:'Crutches underarm each',desc:'Crutches underarm any type each',bclass:'professional',setting:'outpatient',svcs:['12']},
+  {code:'A0429',name:'Ambulance BLS emergency',desc:'Ambulance service basic life support emergency transport',bclass:'institutional',setting:'outpatient'},
+  {code:'L3000',name:'Custom foot insert',desc:'Foot insert removable molded to patient foot',bclass:'professional',setting:'outpatient',svcs:['12','13']},
+  {code:'A6531',name:'Compression garment arm',desc:'Gradient compression garment sleeve and glottete',bclass:'professional',setting:'outpatient',svcs:['12']},
+  {code:'B4034',name:'Enteral nutrition per day',desc:'Enteral feeding supply kit syringe fed per day',bclass:'institutional',setting:'outpatient'},
+  {code:'E0265',name:'Hospital bed semi-electric',desc:'Hospital bed semi-electric includes mattress',bclass:'institutional',setting:'outpatient'},
+  {code:'E0570',name:'Nebulizer compressor',desc:'Nebulizer compressor used with aerosol generator',bclass:'professional',setting:'outpatient',svcs:['12']},
+  {code:'A4253',name:'Glucose test strips 50',desc:'Blood glucose test or reagent strips home monitor per 50',bclass:'professional',setting:'outpatient',svcs:['12']},
+  {code:'K0462',name:'Durable medical equipment',desc:'Temporary replacement for patient owned equipment requiring repair',bclass:'professional',setting:'outpatient',svcs:['12','13']},
+  {code:'G0008',name:'Flu vaccine administration',desc:'Administration of influenza virus vaccine',bclass:'professional',setting:'outpatient',svcs:['11','21']},
+  {code:'J0696',name:'Ceftriaxone sodium inject',desc:'Injection ceftriaxone sodium per 250 mg',bclass:'institutional',setting:'outpatient'},
+  {code:'J1040',name:'Methylprednisolone 80mg',desc:'Injection methylprednisolone acetate 80 mg',bclass:'institutional',setting:'outpatient'},
+  {code:'G0101',name:'Cervical/vaginal cancer scr',desc:'Cervical or vaginal cancer screening pelvic and clinical breast exam',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'S0028',name:'Injection oprelvekin',desc:'Injection oprelvekin per 5 mg',bclass:'institutional',setting:'outpatient'}
+];
+
+// MS-DRG
+var D_MSDRG=[
+  {code:'470',name:'Hip Replacement no MCC',desc:'Major joint replacement or reattachment of lower extremity without major complications',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'469',name:'Hip Replacement with MCC',desc:'Major joint replacement or reattachment of lower extremity with major complications',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'488',name:'Cardiac catheterization',desc:'Cardiac catheterization without AMI shock or renal failure',sev:'With CC',bclass:'institutional',setting:'inpatient'},
+  {code:'519',name:'Coronary bypass w/o cardiac cath',desc:'Coronary bypass without cardiac catheterization without MCC',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'459',name:'Spinal fusion except cervical',desc:'Spinal fusion except cervical without MCC',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'193',name:'Pneumonia simple w MCC',desc:'Simple pneumonia and pleurisy with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'291',name:'Heart failure w MCC',desc:'Heart failure and shock with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'61',name:'Ischemic stroke w MCC',desc:'Ischemic stroke with use of thrombolytic agent with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'871',name:'Septicemia w MV',desc:'Septicemia or severe sepsis with mechanical ventilation 96+ hours',sev:'With MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'302',name:'Knee replacement',desc:'Knee joint replacement without MCC',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'638',name:'Diabetes w MCC',desc:'Diabetes with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'683',name:'Renal failure w MCC',desc:'Renal failure with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'392',name:'GI hemorrhage w MCC',desc:'Esophagitis gastroenteritis and miscellaneous digestive disorders with MCC',sev:'With CC',bclass:'institutional',setting:'inpatient'},
+  {code:'177',name:'Respiratory infections w MCC',desc:'Respiratory infections and inflammations with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'330',name:'Major small bowel procedures',desc:'Major small and large bowel procedures with MCC',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'}
+];
+
+// R-DRG (refined DRG)
+var D_RDRG=[
+  {code:'R001',name:'R-DRG Medical no complications',desc:'Refined DRG medical case without complications',sev:'Without Complications',bclass:'institutional',setting:'inpatient'},
+  {code:'R002',name:'R-DRG Surgical moderate CC',desc:'Refined DRG surgical case with moderate complications',sev:'Moderate Complications',bclass:'institutional',setting:'inpatient'},
+  {code:'R003',name:'R-DRG Cardiac high severity',desc:'Refined DRG cardiac case high severity of illness',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'R004',name:'R-DRG Ortho rehabilitation',desc:'Refined DRG orthopaedic rehabilitation without CC',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'R005',name:'R-DRG Neonatal with CC',desc:'Refined DRG neonatal case with complications',sev:'With CC',bclass:'institutional',setting:'inpatient'}
+];
+
+// S-DRG (severity-adjusted DRG)
+var D_SDRG=[
+  {code:'S101',name:'S-DRG Minor severity',desc:'Severity-adjusted DRG minor severity of illness subclass',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'S102',name:'S-DRG Moderate severity',desc:'Severity-adjusted DRG moderate severity of illness subclass',sev:'Moderate Complications',bclass:'institutional',setting:'inpatient'},
+  {code:'S103',name:'S-DRG Major severity',desc:'Severity-adjusted DRG major severity of illness subclass',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'S104',name:'S-DRG Extreme severity',desc:'Severity-adjusted DRG extreme severity of illness subclass',sev:'With MCC',bclass:'institutional',setting:'inpatient'}
+];
+
+// APS-DRG, AP-DRG, APR-DRG
+var D_APSDRG=[
+  {code:'APS100',name:'APS-DRG Pediatric medical',desc:'All-patient severity DRG pediatric medical case',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'APS101',name:'APS-DRG Pediatric surgical',desc:'All-patient severity DRG pediatric surgical case with CC',sev:'With CC',bclass:'institutional',setting:'inpatient'}
+];
+var D_APDRG=[
+  {code:'AP200',name:'AP-DRG Medical general',desc:'All-patient DRG general medical case without complications',sev:'Without Complications',bclass:'institutional',setting:'inpatient'},
+  {code:'AP201',name:'AP-DRG Surgical general',desc:'All-patient DRG general surgical case with moderate complications',sev:'Moderate Complications',bclass:'institutional',setting:'inpatient'}
+];
+var D_APRDRG=[
+  {code:'APR300',name:'APR-DRG Minor severity',desc:'All-patient refined DRG minor severity subclass',sev:'Without CC or MCC',bclass:'institutional',setting:'inpatient'},
+  {code:'APR301',name:'APR-DRG Moderate severity',desc:'All-patient refined DRG moderate severity subclass',sev:'Moderate Complications',bclass:'institutional',setting:'inpatient'},
+  {code:'APR302',name:'APR-DRG Major severity',desc:'All-patient refined DRG major severity subclass',sev:'Major Complications or Comorbidities',bclass:'institutional',setting:'inpatient'},
+  {code:'APR303',name:'APR-DRG Extreme severity',desc:'All-patient refined DRG extreme severity subclass',sev:'With MCC',bclass:'institutional',setting:'inpatient'}
+];
+
+// APC (Ambulatory Payment Classifications)
+var D_APC=[
+  {code:'5161',name:'Level 1 minor procedure',desc:'Level 1 minor procedure APC surgical',bclass:'institutional',setting:'outpatient'},
+  {code:'5162',name:'Level 2 minor procedure',desc:'Level 2 minor procedure APC surgical',bclass:'institutional',setting:'outpatient'},
+  {code:'5072',name:'Level 2 excision biopsy',desc:'Level 2 excision biopsy and incision and drainage APC',bclass:'institutional',setting:'outpatient'},
+  {code:'5115',name:'Level 5 hematology',desc:'Level 5 hematology oncology drug administration APC',bclass:'institutional',setting:'outpatient'},
+  {code:'5301',name:'Level 1 imaging',desc:'Level 1 diagnostic and screening radiology APC',bclass:'institutional',setting:'outpatient'},
+  {code:'5302',name:'Level 2 imaging',desc:'Level 2 diagnostic and screening radiology APC',bclass:'institutional',setting:'outpatient'}
+];
+
+// NDC (National Drug Codes)
+var D_NDC=[
+  {code:'00069420030',name:'Lipitor 10mg 90ct',desc:'Atorvastatin calcium 10mg oral tablet 90 count NDC',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'00071015423',name:'Lyrica 75mg 60ct',desc:'Pregabalin 75mg oral capsule 60 count NDC',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'00006000254',name:'Januvia 100mg 30ct',desc:'Sitagliptin phosphate 100mg oral tablet 30 count NDC',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'50458058030',name:'Invega 6mg 30ct',desc:'Paliperidone 6mg extended release tablet 30 count NDC',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'00310011130',name:'Nexium 40mg 30ct',desc:'Esomeprazole magnesium 40mg delayed release capsule 30 count NDC',bclass:'professional',setting:'outpatient',svcs:['11']}
+];
+
+// RC (Revenue Code)
+var D_RC=[
+  {code:'0100',name:'Room and board semiprivate',desc:'Room and board semiprivate two bed accommodation',bclass:'institutional',setting:'inpatient'},
+  {code:'0120',name:'Room and board medical surgical',desc:'Room and board medical surgical two bed semi-private',bclass:'institutional',setting:'inpatient'},
+  {code:'0200',name:'ICU general intensive care',desc:'Intensive care unit general care per diem',bclass:'institutional',setting:'inpatient'},
+  {code:'0250',name:'Pharmacy general',desc:'Pharmacy general classification',bclass:'institutional',setting:'outpatient'},
+  {code:'0300',name:'Lab general classification',desc:'Laboratory general classification clinical',bclass:'institutional',setting:'outpatient'},
+  {code:'0360',name:'OR general classification',desc:'Operating room general classification',bclass:'institutional',setting:'inpatient'},
+  {code:'0450',name:'Emergency room general',desc:'Emergency room general classification',bclass:'institutional',setting:'outpatient'},
+  {code:'0710',name:'Recovery room general',desc:'Recovery room general classification post-surgical',bclass:'institutional',setting:'inpatient'}
+];
+
+// HIPPS (Health Insurance Prospective Payment System)
+var D_HIPPS=[
+  {code:'AAA01',name:'HIPPS SNF RUG level A',desc:'HIPPS skilled nursing facility RUG-IV rehabilitation level A',bclass:'institutional',setting:'inpatient'},
+  {code:'BBB02',name:'HIPPS SNF RUG level B',desc:'HIPPS skilled nursing facility RUG-IV extensive services level B',bclass:'institutional',setting:'inpatient'},
+  {code:'CCC03',name:'HIPPS HHA clinical grp',desc:'HIPPS home health agency clinical grouping case mix',bclass:'institutional',setting:'outpatient'},
+  {code:'DDD04',name:'HIPPS IRF CMG tier',desc:'HIPPS inpatient rehabilitation facility CMG tier assignment',bclass:'institutional',setting:'inpatient'},
+  {code:'EEE05',name:'HIPPS LTCH LTC-DRG',desc:'HIPPS long term care hospital LTC-DRG classification',bclass:'institutional',setting:'inpatient'}
+];
+
+// EAPG (Enhanced Ambulatory Patient Groups)
+var D_EAPG=[
+  {code:'EAPG100',name:'EAPG level 1 visit',desc:'Enhanced ambulatory patient group level 1 clinic visit',bclass:'institutional',setting:'outpatient'},
+  {code:'EAPG200',name:'EAPG level 2 procedure',desc:'Enhanced ambulatory patient group level 2 ancillary procedure',bclass:'institutional',setting:'outpatient'},
+  {code:'EAPG300',name:'EAPG diagnostic radiology',desc:'Enhanced ambulatory patient group diagnostic radiology',bclass:'institutional',setting:'outpatient'}
+];
+
+// CDT (Current Dental Terminology)
+var D_CDT=[
+  {code:'D0120',name:'Periodic oral evaluation',desc:'Periodic oral evaluation established patient CDT',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'D0150',name:'Comprehensive oral eval',desc:'Comprehensive oral evaluation new or established patient CDT',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'D0210',name:'Intraoral complete series',desc:'Radiographic intraoral complete series of radiographic images CDT',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'D1110',name:'Prophylaxis adult',desc:'Prophylaxis adult removal of plaque scaling and polishing CDT',bclass:'professional',setting:'outpatient',svcs:['11']},
+  {code:'D2391',name:'Resin composite 1 surface',desc:'Resin-based composite one surface posterior primary or permanent CDT',bclass:'professional',setting:'outpatient',svcs:['11']}
+];
+
+// LOCAL (local code)
+var D_LOCAL=[
+  {code:'L9901',name:'Local code custom svc A',desc:'Locally defined service code custom type A regional plan',bclass:'professional',setting:'outpatient',svcs:['CSTM-00']},
+  {code:'L9902',name:'Local code custom svc B',desc:'Locally defined service code custom type B regional plan',bclass:'professional',setting:'outpatient',svcs:['CSTM-00']},
+  {code:'L9903',name:'Local code inpatient proc',desc:'Locally defined inpatient procedure code regional plan',bclass:'institutional',setting:'inpatient'},
+  {code:'L9904',name:'Local code outpatient svc',desc:'Locally defined outpatient service code regional plan',bclass:'institutional',setting:'outpatient'}
+];
+
+// ICD (ICD-10-CM / ICD-10-PCS)
+var D_ICD=[
+  {code:'0FB13ZZ',name:'Excision common bile duct',desc:'Excision of common bile duct percutaneous approach ICD-10-PCS',bclass:'institutional',setting:'inpatient'},
+  {code:'0SRC0J9',name:'Replace right hip joint',desc:'Replacement of right hip joint synthetic substitute ICD-10-PCS',bclass:'institutional',setting:'inpatient'},
+  {code:'02100Z8',name:'Bypass coronary artery',desc:'Bypass coronary artery one site from aorta ICD-10-PCS',bclass:'institutional',setting:'inpatient'},
+  {code:'5A1935Z',name:'Respiratory ventilation',desc:'Respiratory ventilation 24-96 consecutive hours ICD-10-PCS',bclass:'institutional',setting:'inpatient'},
+  {code:'30230AZ',name:'Transfusion non-autologous',desc:'Transfusion of peripheral artery non-autologous whole blood ICD-10-PCS',bclass:'institutional',setting:'inpatient'}
+];
+
+// CSTM-ALL (custom — applies to all)
+var D_CSTMALL=[
+  {code:'CSTM-ALL',name:'Custom applies to all codes',desc:'Custom billing code type applies to all procedure codes in this arrangement',bclass:'professional',setting:'outpatient',svcs:['CSTM-00']},
+  {code:'CSTM-ALL',name:'Custom global arrangement',desc:'Custom global billing arrangement covering all service codes in network',bclass:'both',setting:'both',svcs:['CSTM-00']},
+  {code:'CSTM-ALL',name:'Custom institutional global',desc:'Custom institutional arrangement applying to all inpatient service codes',bclass:'institutional',setting:'inpatient'}
+];
+
+var R_NETS=['Network A','Network B','Network C','Network Alpha','Network Beta','Network Premier','Network Select','Network Plus','Network Gold','Network Standard','PPO Network A','HMO Network B'];
+var R_BIZ=['Provider Group One','Regional Medical Associates','Primary Care Partners','Specialty Health Group','Community Health Network','Advanced Medical Group','Integrated Care Solutions','Metropolitan Providers','Coastal Health Partners','Valley Medical Group','Statewide Provider Network','Academic Medical Center Group'];
+var R_MODS=['25','26','59','76','91','GT','TC','GX','GY','GZ','KX','AT'];
+var NARR_POOL=['ffs','bundle','capitation'];
+var NTYPE_POOL=['negotiated','derived','fee schedule','percentage','per diem'];
+
+// All type pools for weighted random selection
+var ALL_TYPES=[
+  {type:'CPT',     pool:D_CPT,     w:30, isDRG:false},
+  {type:'HCPCS',   pool:D_HCPCS,   w:20, isDRG:false},
+  {type:'MS-DRG',  pool:D_MSDRG,   w:12, isDRG:true},
+  {type:'R-DRG',   pool:D_RDRG,    w:3,  isDRG:true},
+  {type:'S-DRG',   pool:D_SDRG,    w:3,  isDRG:true},
+  {type:'APS-DRG', pool:D_APSDRG,  w:2,  isDRG:true},
+  {type:'AP-DRG',  pool:D_APDRG,   w:2,  isDRG:true},
+  {type:'APR-DRG', pool:D_APRDRG,  w:3,  isDRG:true},
+  {type:'APC',     pool:D_APC,     w:6,  isDRG:false},
+  {type:'NDC',     pool:D_NDC,     w:4,  isDRG:false},
+  {type:'RC',      pool:D_RC,      w:4,  isDRG:false},
+  {type:'HIPPS',   pool:D_HIPPS,   w:2,  isDRG:false},
+  {type:'EAPG',    pool:D_EAPG,    w:2,  isDRG:false},
+  {type:'CDT',     pool:D_CDT,     w:2,  isDRG:false},
+  {type:'LOCAL',   pool:D_LOCAL,   w:2,  isDRG:false},
+  {type:'ICD',     pool:D_ICD,     w:2,  isDRG:false},
+  {type:'CSTM-ALL',pool:D_CSTMALL, w:1,  isDRG:false}
+];
+// Build weighted selection array
+var WEIGHTED_TYPES=(function(){
+  var arr=[];
+  ALL_TYPES.forEach(function(t){for(var i=0;i<t.w;i++)arr.push(t);});
+  return arr;
+})();
+
+// AA-valid types (no CSTM-ALL)
+var AA_TYPES=ALL_TYPES.filter(function(t){return t.type!=='CSTM-ALL';});
+var WEIGHTED_AA_TYPES=(function(){
+  var arr=[];
+  AA_TYPES.forEach(function(t){for(var i=0;i<t.w;i++)arr.push(t);});
+  return arr;
+})();
+
+// ── Random helper functions ──
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function rndInt(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function rndFloat(min,max){return parseFloat((Math.random()*(max-min)+min).toFixed(2));}
+function rndNPI(){var n='1';for(var i=0;i<9;i++)n+=rndInt(0,9);return parseInt(n);}
+function pad2(n){return n<10?'0'+n:String(n);}
+function rndDate(){var y=rndInt(2025,2027);var m=pad2(rndInt(1,12));var d=pad2(rndInt(1,28));return y+'-'+m+'-'+d;}
+function rndEIN(){
+  var prefix=String(rndInt(10,99));
+  var suffix=String(rndInt(1000000,9999999));
+  // CMS schema: hyphen is optional (\d{2}-?\d{7}) — randomly generate both formats
+  return Math.random()<0.5 ? prefix+'-'+suffix : prefix+suffix;
+}
+function rndSvc(){
+  if(Math.random()<0.10)return 'CSTM-00';
+  var svcs=['11','12','13','21','22','23','31','32','41','51','61','71','81'];
+  return svcs[Math.floor(Math.random()*svcs.length)];
+}
+
+
+function makeProviderRefs(count){
+  var refs=[];
+  for(var i=0;i<count;i++){
+    var ttype=Math.random()>0.2?'ein':'npi';
+    var tval=ttype==='ein'?rndEIN():String(rndNPI());
+    var tin={type:ttype,value:tval};
+    if(ttype==='ein')tin.business_name=rnd(R_BIZ);
+    refs.push({
+      provider_group_id:i+1,
+      network_name:[rnd(R_NETS)],
+      provider_groups:[{npi:[rndNPI()],tin:tin}]
+    });
+  }
+  return refs;
+}
+
+function pickType(useAll){
+  // pick a random type from weighted pool
+  var pool=useAll?WEIGHTED_TYPES:WEIGHTED_AA_TYPES;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function buildSvcs(rec,bclass){
+  // use the record's own defined svcs if present
+  if(rec.svcs&&rec.svcs.length){
+    // 20% chance CSTM-00 replaces the first svc for variety
+    if(Math.random()<0.20)return['CSTM-00'];
+    return rec.svcs.slice();
+  }
+  // fallback for professional/both with no predefined svcs
+  if(bclass==='professional'||bclass==='both'){
+    return[rndSvc()];
+  }
+  return[];
+}
+
+function makeInnRecord(idx,providerCount,opts){
+  var typeObj;
+  if(!opts.mixCtypes){
+    // no mixing — only CPT
+    typeObj=ALL_TYPES[0];
+  } else {
+    typeObj=pickType(true);
+  }
+
+  var ctype=typeObj.type;
+  var isDRG=typeObj.isDRG;
+  var pool=typeObj.pool;
+  var rec=pool[Math.floor(Math.random()*pool.length)];
+
+  // billing class: use record's recommended class, or mix if enabled
+  var bclass;
+  if(opts.mixBclass&&!isDRG){
+    // true mix — cycle through all three billing classes evenly
+    var bclassCycle=['professional','institutional','both'];
+    bclass=bclassCycle[idx % 3];
+  } else {
+    bclass=rec.bclass||'institutional';
+  }
+
+  // setting: use record's recommended setting, or mix if enabled
+  var setting;
+  if(opts.mixSetting&&!isDRG){
+    // true mix — cycle through all three settings evenly
+    var settingCycle=['outpatient','inpatient','both'];
+    setting=settingCycle[idx % 3];
+  } else if(isDRG){
+    setting=rec.setting||'inpatient';
+  } else {
+    setting=rec.setting||'outpatient';
+  }
+
+  // CMS rule: inpatient+professional is invalid — switch to institutional
+  if(setting==='inpatient'&&bclass==='professional'){bclass='institutional';}
+  // CMS rule: inpatient+both billing_class — force institutional
+  if(setting==='inpatient'&&bclass==='both'){bclass='institutional';}
+
+  var price={
+    negotiated_type:rnd(NTYPE_POOL),
+    negotiated_rate:rndFloat(25,25000),
+    expiration_date:rndDate(),
+    billing_class:bclass,
+    setting:setting
+  };
+
+  // service_code: required for professional/both
+  if(bclass==='professional'||bclass==='both'){
+    var svcs=buildSvcs(rec,bclass);
+    if(!svcs.length)svcs=[rndSvc()];
+    // deduplicate
+    price.service_code=Array.from?Array.from(new Set(svcs)):svcs.filter(function(v,i,a){return a.indexOf(v)===i;});
+  }
+
+  // billing_code_modifier: 20% chance
+  if(Math.random()<0.20){
+    var numMods=rndInt(1,2);var usedMods={};var mods=[];
+    while(mods.length<numMods){var m=rnd(R_MODS);if(!usedMods[m]){usedMods[m]=1;mods.push(m);}}
+    price.billing_code_modifier=mods;
+  }
+
+  var provRef=rndInt(1,providerCount);
+  var entry={
+    negotiation_arrangement:rnd(NARR_POOL),
+    name:rec.name+' '+(idx+1),
+    billing_code_type:ctype,
+    billing_code_type_version:'2023',
+    billing_code:rec.code,
+    description:rec.desc,
+    negotiated_rates:[{provider_references:[provRef],negotiated_prices:[price]}]
+  };
+
+  // DRG types: severity_of_illness is required
+  if(isDRG){
+    entry.severity_of_illness=rec.sev||rnd(['Without CC or MCC','With CC','With MCC','Major Complications or Comorbidities','Moderate Complications','Without Complications']);
+  }
+
+  return entry;
+}
+
+function makeAARecord(idx,opts){
+  var typeObj;
+  if(!opts.mixCtypes){
+    typeObj=AA_TYPES[0]; // CPT only
+  } else {
+    typeObj=pickType(false); // no CSTM-ALL for AA
+  }
+
+  var ctype=typeObj.type;
+  var pool=typeObj.pool;
+  var rec=pool[Math.floor(Math.random()*pool.length)];
+
+  var bclass;
+  if(opts.mixBclass){
+    // weight toward record's recommended bclass but mix
+    bclass=Math.random()<0.6?(rec.bclass||'professional'):rnd(['professional','institutional']);
+  } else {
+    bclass=rec.bclass||'professional';
+  }
+  // AA only allows professional or institutional (not both)
+  if(bclass==='both')bclass='professional';
+
+  var setting=rec.setting||'outpatient';
+  // AA setting only allows inpatient or outpatient (not both)
+  if(setting==='both')setting=Math.random()<0.5?'inpatient':'outpatient';
+
+  var ttype=Math.random()>0.15?'ein':'npi';
+  var tval=ttype==='ein'?rndEIN():String(rndNPI());
+  var tin={type:ttype,value:tval};
+
+  var aaObj={
+    tin:tin,
+    billing_class:bclass,
+    setting:setting,
+    payments:[]
+  };
+
+  // service_code required for professional
+  if(bclass==='professional'){
+    var svcs=buildSvcs(rec,bclass);
+    if(!svcs.length)svcs=[rndSvc()];
+    aaObj.service_code=Array.from?Array.from(new Set(svcs)):svcs.filter(function(v,i,a){return a.indexOf(v)===i;});
+  }
+
+  var numProviders=opts.multiProv?rndInt(1,3):1;
+  var providers=[];
+  for(var pi=0;pi<numProviders;pi++){
+    providers.push({npi:[rndNPI()],billed_charge:rndFloat(80,8000)});
+  }
+
+  var payment={allowed_amount:rndFloat(30,5000),providers:providers};
+
+  // billing_code_modifier: 15% chance
+  if(Math.random()<0.15){
+    var mods2=[rnd(R_MODS)];
+    payment.billing_code_modifier=mods2;
+  }
+
+  aaObj.payments.push(payment);
+
+  return{
+    name:rec.name+' '+(idx+1),
+    billing_code_type:ctype,
+    billing_code:rec.code,
+    billing_code_type_version:'2023',
+    description:rec.desc,
+    allowed_amounts:[aaObj]
+  };
+}
+
+function getCount(scope){
+  var custom=parseInt(document.getElementById(scope+'-custom-cnt').value)||0;
+  return custom>0?custom:LTEST_COUNTS[scope];
+}
+
+function getLtestHeader(pfx){
+  return{
+    entity:document.getElementById(pfx+'-ename').value.trim()||'AMPS',
+    etype:document.getElementById(pfx+'-etype').value||'third-party administrator',
+    date:document.getElementById(pfx+'-date').value||new Date().toISOString().split('T')[0],
+    ver:document.getElementById(pfx+'-ver').value||'2.0.0',
+    pname:document.getElementById(pfx+'-pname').value.trim(),
+    sponsor:document.getElementById(pfx+'-sponsor').value.trim(),
+    issuer:document.getElementById(pfx+'-issuer').value.trim(),
+    planid:document.getElementById(pfx+'-planid').value.trim(),
+    idtype:document.getElementById(pfx+'-idtype').value||'ein',
+    mkt:document.getElementById(pfx+'-mkt').value||'individual'
+  };
+}
+
+function setLtestProgress(scope,pct,txt){
+  document.getElementById(scope+'-prog').classList.add('on');
+  document.getElementById(scope+'-prog-bar').style.width=pct+'%';
+  document.getElementById(scope+'-prog-txt').textContent=txt;
+}
+
+function hideLtestProgress(scope){
+  document.getElementById(scope+'-prog').classList.remove('on');
+}
+
+function showLtestStat(scope,msg){
+  var el=document.getElementById(scope+'-ltest-stat');
+  el.textContent=msg;el.classList.add('on');
+}
+
+function ltestGenINN(){
+  var n=getCount('inn');
+  if(!n||n<1){toast('Enter a valid record count.');return;}
+  if(n>LTEST_MAX){showErr('inn','Maximum is 10,000 records per file. You entered '+n.toLocaleString()+'. Please reduce the count and try again.');showLimitMsg('inn',n);return;}
+  var h=getLtestHeader('ih');
+  if(!h.entity){showErr('inn','Reporting entity name is required.');return;}
+  if(h.idtype==='ein'&&h.planid&&!h.sponsor){showErr('inn','Plan sponsor name required when Plan ID type is ein.');return;}
+
+  var opts={
+    mixCtypes:document.getElementById('inn-mix-ctypes').checked,
+    mixBclass:document.getElementById('inn-mix-bclass').checked,
+    mixSetting:document.getElementById('inn-mix-setting').checked,
+    multiProv:document.getElementById('inn-multi-prov').checked
+  };
+
+  var provCount=opts.multiProv?rndInt(2,5):1;
+  var provRefs=makeProviderRefs(provCount);
+
+  setLtestProgress('inn',5,'Setting up provider references...');
+
+  // use setTimeout to allow UI to update
+  setTimeout(function(){
+    var inNet=[];
+    var chunkSize=50;
+    var total=n;
+    var done=0;
+
+    function processChunk(){
+      var end=Math.min(done+chunkSize,total);
+      for(var i=done;i<end;i++){
+        inNet.push(makeInnRecord(i,provCount,opts));
+      }
+      done=end;
+      var pct=Math.round((done/total)*90)+5;
+      setLtestProgress('inn',pct,'Generated '+done+' / '+total+' records...');
+      if(done<total){
+        setTimeout(processChunk,0);
+      } else {
+        // build final JSON
+        var result={};
+        result.reporting_entity_name=h.entity;
+        result.reporting_entity_type=h.etype;
+        if(h.pname)result.plan_name=h.pname;
+        // always generate fresh random plan ID for each load test run
+        var ltPlanId=rndPlanId();
+        result.plan_id_type=h.idtype;
+        result.plan_id=ltPlanId;
+        result.plan_market_type=h.mkt;
+        if(h.sponsor)result.plan_sponsor_name=h.sponsor;
+        if(h.issuer)result.issuer_name=h.issuer;
+        result.last_updated_on=h.date;
+        result.version=h.ver;
+        result.provider_references=provRefs;
+        result.in_network=inNet;
+
+        setLtestProgress('inn',100,'Downloading...');
+        var now2=new Date();
+        var hh2=pad2(now2.getHours());
+        var mm2=pad2(now2.getMinutes());
+        var ss2=pad2(now2.getSeconds());
+        var seq2=getSeq('inn');
+        var fname=now2.toISOString().split('T')[0]+'_'+hh2+mm2+ss2+'_v'+seq2+'_loadtest-'+n+'_in-network-rates.json';
+        var blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});
+        var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        hideLtestProgress('inn');
+        var szMB=((JSON.stringify(result).length)/1024/1024).toFixed(2);
+        showLtestStat('inn','✓ Load test complete: '+n.toLocaleString()+' in_network records | '+provCount+' provider ref(s) | ~'+szMB+' MB | '+fname);
+        toast('✓ Load test: '+n.toLocaleString()+' records — ~'+szMB+' MB downloaded');
+      }
+    }
+    processChunk();
+  },50);
+}
+
+function ltestGenAA(){
+  var n=getCount('aa');
+  if(!n||n<1){toast('Enter a valid record count.');return;}
+  if(n>LTEST_MAX){showErr('aa','Maximum is 10,000 records per file. You entered '+n.toLocaleString()+'. Please reduce the count and try again.');showLimitMsg('aa',n);return;}
+  var h=getLtestHeader('ah');
+  if(!h.entity){showErr('aa','Reporting entity name is required.');return;}
+  if(h.idtype==='ein'&&h.planid&&!h.sponsor){showErr('aa','Plan sponsor name required when Plan ID type is ein.');return;}
+
+  var opts={
+    mixCtypes:document.getElementById('aa-mix-ctypes').checked,
+    mixBclass:document.getElementById('aa-mix-bclass').checked,
+    multiProv:document.getElementById('aa-multi-prov').checked
+  };
+
+  setLtestProgress('aa',5,'Generating records...');
+
+  setTimeout(function(){
+    var oon=[];var chunkSize=50;var total=n;var done=0;
+
+    function processChunk(){
+      var end=Math.min(done+chunkSize,total);
+      for(var i=done;i<end;i++){oon.push(makeAARecord(i,opts));}
+      done=end;
+      var pct=Math.round((done/total)*90)+5;
+      setLtestProgress('aa',pct,'Generated '+done+' / '+total+' records...');
+      if(done<total){setTimeout(processChunk,0);}
+      else{
+        var result={};
+        result.reporting_entity_name=h.entity;
+        result.reporting_entity_type=h.etype;
+        if(h.pname)result.plan_name=h.pname;
+        // always generate fresh random plan ID for each load test run
+        var ltPlanId=rndPlanId();
+        result.plan_id_type=h.idtype;
+        result.plan_id=ltPlanId;
+        result.plan_market_type=h.mkt;
+        if(h.sponsor)result.plan_sponsor_name=h.sponsor;
+        if(h.issuer)result.issuer_name=h.issuer;
+        result.last_updated_on=h.date;
+        result.version=h.ver;
+        result.out_of_network=oon;
+
+        setLtestProgress('aa',100,'Downloading...');
+        var now3=new Date();
+        var hh3=pad2(now3.getHours());
+        var mm3=pad2(now3.getMinutes());
+        var ss3=pad2(now3.getSeconds());
+        var seq3=getSeq('aa');
+        var fname=now3.toISOString().split('T')[0]+'_'+hh3+mm3+ss3+'_v'+seq3+'_loadtest-'+n+'_allowed-amounts.json';
+        var blob=new Blob([JSON.stringify(result,null,2)],{type:'application/json'});
+        var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        hideLtestProgress('aa');
+        var szMBaa=((JSON.stringify(result).length)/1024/1024).toFixed(2);
+        showLtestStat('aa','✓ Load test complete: '+n.toLocaleString()+' out_of_network records | ~'+szMBaa+' MB | '+fname);
+        toast('✓ Load test: '+n.toLocaleString()+' records — ~'+szMBaa+' MB downloaded');
+      }
+    }
+    processChunk();
+  },50);
+}
+
+// random 10-digit plan ID — new value every page load
+function rndPlanId(){
+  var id=String(rndInt(1,9));
+  for(var i=0;i<9;i++)id+=String(rndInt(0,9));
+  return id;
+}
+
+initINN();initAA();initTOC();
+
+// apply random plan IDs after all tabs are built
+(function(){
+  var pid=rndPlanId();
+  var ihp=document.getElementById('ih-planid');
+  var ahp=document.getElementById('ah-planid');
+  if(ihp)ihp.value=pid;
+  if(ahp)ahp.value=pid;
+})();
+
+</script>
+</body>
+</html>
