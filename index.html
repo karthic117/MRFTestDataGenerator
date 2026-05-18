@@ -412,10 +412,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="cnt-custom"><span style="font-size:12px;color:#5b21b6;font-weight:600">Custom:</span><input id="inn-custom-cnt" type="number" min="1" max="20000" value="" placeholder="e.g. 5000 (max 20,000)" oninput="selCount('inn',0,null)"/></div>
     </div>
     <div class="ltest-opts">
-      <label class="ltest-opt"><input type="checkbox" id="inn-mix-ctypes" checked/> Mix billing code types (CPT, HCPCS, MS-DRG, etc.)</label>
-      <label class="ltest-opt"><input type="checkbox" id="inn-mix-bclass" checked/> Mix billing classes (professional / institutional / both)</label>
-      <label class="ltest-opt"><input type="checkbox" id="inn-mix-setting" checked/> Mix settings (inpatient / outpatient / both)</label>
-      <label class="ltest-opt"><input type="checkbox" id="inn-multi-prov" checked/> Use multiple provider references</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-ctypes"/> Mix billing code types (CPT, HCPCS, MS-DRG, etc.)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-bclass" onchange="syncMix('inn','bclass',this.checked)"/> Mix billing classes (professional / institutional / both)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-mix-setting" onchange="syncMix('inn','setting',this.checked)"/> Mix settings (inpatient / outpatient / both)</label>
+      <label class="ltest-opt"><input type="checkbox" id="inn-multi-prov"/> Use multiple provider references</label>
     </div>
     <div class="ltest-limit" id="inn-limit-msg"></div>
     <div class="ltest-actions">
@@ -523,9 +523,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="cnt-custom"><span style="font-size:12px;color:#5b21b6;font-weight:600">Custom:</span><input id="aa-custom-cnt" type="number" min="1" max="100000" value="" placeholder="e.g. 5000 (max 1,00,000)" oninput="selCount('aa',0,null)"/></div>
     </div>
     <div class="ltest-opts">
-      <label class="ltest-opt"><input type="checkbox" id="aa-mix-ctypes" checked/> Mix billing code types</label>
-      <label class="ltest-opt"><input type="checkbox" id="aa-mix-bclass" checked/> Mix billing classes (professional / institutional)</label>
-      <label class="ltest-opt"><input type="checkbox" id="aa-multi-prov" checked/> Multiple providers per record</label>
+      <label class="ltest-opt"><input type="checkbox" id="aa-mix-ctypes"/> Mix billing code types</label>
+      <label class="ltest-opt"><input type="checkbox" id="aa-mix-bclass"/> Mix billing classes (professional / institutional)</label>
+      <label class="ltest-opt"><input type="checkbox" id="aa-multi-prov"/> Multiple providers per record</label>
     </div>
     <div class="ltest-limit" id="aa-limit-msg"></div>
     <div class="ltest-actions">
@@ -628,7 +628,8 @@ function isNPI(n){return /^[1-9]\d{9}$/.test(String(n));}
 
 // CMS schema: service_code pattern ^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$
 // Valid: 10-99 (two-digit, at least one non-zero digit in each pair) OR literal CSTM-00
-function isValidSvc(s){return s==='CSTM-00'||/^([1-9][0-9]|[0-9][1-9])$/.test(s);}
+function isValidSvc(s){return s==='CSTM-00'||/^([1-9][0-9]|[0-9][1-9])$/.test(s);}  // INN
+function isValidSvcAA(s){return /^([1-9][0-9]|[0-9][1-9])$/.test(s);}  // AA: no CSTM-00
 
 function validateSvcs(raw,label,errFn){
   if(!raw||!raw.trim())return[];
@@ -1010,7 +1011,7 @@ function buildAA(id,d){
     '<div class="mt"><div class="f" id="asvcf-'+id+'">'+
       '<label id="asvcl-'+id+'">'+(isPro?'Service code(s) <span class="req">*</span>':'Service code(s) <span class="cond-label cond-opt">N/A for institutional</span>')+'</label>'+
       '<input id="asvc-'+id+'" value="'+esc(d.svc||'')+'" placeholder="e.g. 11, 22"'+(isPro?'':' disabled')+'/>'+
-      (isPro?'<span class="f-warn">Format: 2-digit (10-99) or CSTM-00. Required for: professional</span>':'<span class="f-hint">Required only when billing class is professional</span>')+
+      (isPro?'<span class="f-warn">Format: 2-digit (10-99), e.g. 11, 22. Required for: professional</span>':'<span class="f-hint">Required only when billing class is professional</span>')+
     '</div></div>'+
 
     '<div class="sec-label">Payment &amp; providers</div>'+
@@ -1519,7 +1520,8 @@ var PLAN_ID_TYPE_ENUM=['ein','hios'];
 var PLAN_MKT_ENUM=['group','individual'];
 var TIN_TYPE_ENUM=['ein','npi'];
 var DATE_PATTERN=/^\d{4}-\d{2}-\d{2}$/;
-var SVC_PATTERN=/^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$/;
+var SVC_PATTERN=/^([1-9][0-9]|[0-9][1-9])$|^CSTM-00$/;   // INN: allows CSTM-00
+var SVC_PATTERN_AA=/^([1-9][0-9]|[0-9][1-9])$/;          // AA: no CSTM-00 per schema
 var EIN_PATTERN=/^\d{2}-?\d{7}$/;
 
 function runValidation(scope, data){
@@ -1833,7 +1835,7 @@ function runValidation(scope, data){
               else{
                 chkUnique(aa.service_code,ap+'.service_code — uniqueItems');
                 aa.service_code.forEach(function(sc,si){
-                  if(!SVC_PATTERN.test(sc))fail(ap+'.service_code['+si+']','Value "'+sc+'" must match ^([1-9][0-9]|[0-9][1-9])$');
+                  if(!SVC_PATTERN_AA.test(sc))fail(ap+'.service_code['+si+']','Value "'+sc+'" does not match AA pattern ^([1-9][0-9]|[0-9][1-9])$ — CSTM-00 is not allowed in Allowed Amounts');
                   else ok(ap+'.service_code['+si+']','"'+sc+'"');
                 });
               }
@@ -2080,6 +2082,33 @@ function togglePassRows(scope){
     ?'<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Show passed'
     :'<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Hide passed';
 }
+// ── Checkbox sync rules ──
+// mixBclass and mixSetting are co-dependent for INN (both needed for full mix)
+function syncMix(scope, which, checked){
+  if(syncMix._running) return;
+  syncMix._running = true;
+  try {
+    function set(id, val){var el=document.getElementById(id);if(el)el.checked=val;}
+
+    if(scope==='inn'){
+      // Mix billing classes and Mix settings are co-dependent (paired cycle)
+      if(which==='bclass'){
+        set('inn-mix-setting', checked);
+      }
+      if(which==='setting'){
+        set('inn-mix-bclass', checked);
+      }
+      // Mix code types is fully independent — no cascade
+    }
+    if(scope==='aa'){
+      // AA has no setting mix — bclass is independent
+      // No dependencies for AA
+    }
+  } finally {
+    syncMix._running = false;
+  }
+}
+
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -2395,7 +2424,13 @@ function rndEIN(){
   return Math.random()<0.5 ? prefix+'-'+suffix : prefix+suffix;
 }
 function rndSvc(){
+  // INN only — allows CSTM-00
   if(Math.random()<0.10)return 'CSTM-00';
+  var svcs=['11','12','13','21','22','23','31','32','41','51','61','71','81'];
+  return svcs[Math.floor(Math.random()*svcs.length)];
+}
+function rndSvcAA(){
+  // AA only — no CSTM-00 per schema pattern ^([1-9][0-9]|[0-9][1-9])$
   var svcs=['11','12','13','21','22','23','31','32','41','51','61','71','81'];
   return svcs[Math.floor(Math.random()*svcs.length)];
 }
@@ -2423,16 +2458,17 @@ function pickType(useAll){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
-function buildSvcs(rec,bclass){
-  // use the record's own defined svcs if present
+function buildSvcs(rec,bclass,forAA){
+  // forAA=true: AA schema does not allow CSTM-00
   if(rec.svcs&&rec.svcs.length){
-    // 20% chance CSTM-00 replaces the first svc for variety
-    if(Math.random()<0.20)return['CSTM-00'];
-    return rec.svcs.slice();
+    if(!forAA&&Math.random()<0.20)return['CSTM-00'];  // INN only
+    // filter CSTM-00 for AA; use rec svcs
+    var svcs=rec.svcs.filter(function(s){return !forAA||s!=='CSTM-00';});
+    if(svcs.length)return svcs.slice();
   }
-  // fallback for professional/both with no predefined svcs
+  // fallback
   if(bclass==='professional'||bclass==='both'){
-    return[rndSvc()];
+    return[forAA?rndSvcAA():rndSvc()];
   }
   return[];
 }
@@ -2451,31 +2487,30 @@ function makeInnRecord(idx,providerCount,opts){
   var pool=typeObj.pool;
   var rec=pool[Math.floor(Math.random()*pool.length)];
 
-  // billing class: use record's recommended class, or mix if enabled
-  var bclass;
-  if(opts.mixBclass&&!isDRG){
-    // true mix — cycle through all three billing classes evenly
+  // billing class + setting — paired to guarantee no invalid CMS combinations
+  // When both mix ON: cycles professional/outpatient → institutional/inpatient → both/outpatient
+  var PAIRS=[
+    {bclass:'professional', setting:'outpatient'},
+    {bclass:'institutional',setting:'inpatient'},
+    {bclass:'both',         setting:'outpatient'},
+  ];
+  var bclass, setting;
+  if(isDRG){
+    bclass='institutional'; setting='inpatient';
+  } else if(opts.mixBclass&&opts.mixSetting){
+    var p2=PAIRS[idx % 3]; bclass=p2.bclass; setting=p2.setting;
+  } else if(opts.mixBclass){
     var bclassCycle=['professional','institutional','both'];
-    bclass=bclassCycle[idx % 3];
-  } else {
-    bclass=rec.bclass||'institutional';
-  }
-
-  // setting: use record's recommended setting, or mix if enabled
-  var setting;
-  if(opts.mixSetting&&!isDRG){
-    // true mix — cycle through all three settings evenly
-    var settingCycle=['outpatient','inpatient','both'];
+    bclass=bclassCycle[idx % 3]; setting='outpatient';
+  } else if(opts.mixSetting){
+    bclass='professional';
+    var settingCycle=['outpatient','both','outpatient'];
     setting=settingCycle[idx % 3];
-  } else if(isDRG){
-    setting=rec.setting||'inpatient';
   } else {
-    setting=rec.setting||'outpatient';
+    bclass='professional'; setting='outpatient';
   }
-
-  // CMS rule: inpatient+professional is invalid — switch to institutional
+  // defensive CMS safety net
   if(setting==='inpatient'&&bclass==='professional'){bclass='institutional';}
-  // CMS rule: inpatient+both billing_class — force institutional
   if(setting==='inpatient'&&bclass==='both'){bclass='institutional';}
 
   var price={
@@ -2534,17 +2569,23 @@ function makeAARecord(idx,opts){
 
   var bclass;
   if(opts.mixBclass){
-    // weight toward record's recommended bclass but mix
-    bclass=Math.random()<0.6?(rec.bclass||'professional'):rnd(['professional','institutional']);
+    // true mix — alternate professional / institutional
+    bclass=idx%2===0?'professional':'institutional';
   } else {
-    bclass=rec.bclass||'professional';
+    bclass='professional'; // mix OFF — professional is default
   }
   // AA only allows professional or institutional (not both)
   if(bclass==='both')bclass='professional';
 
-  var setting=rec.setting||'outpatient';
+  var setting;
+  if(opts.mixBclass){
+    // vary setting with bclass cycle
+    setting=idx%3===1?'inpatient':'outpatient';
+  } else {
+    setting='outpatient'; // mix OFF — fixed default
+  }
   // AA setting only allows inpatient or outpatient (not both)
-  if(setting==='both')setting=Math.random()<0.5?'inpatient':'outpatient';
+  if(setting==='both')setting='outpatient';
 
   var ttype=Math.random()>0.15?'ein':'npi';
   var tval=ttype==='ein'?rndEIN():String(rndNPI());
@@ -2557,10 +2598,10 @@ function makeAARecord(idx,opts){
     payments:[]
   };
 
-  // service_code required for professional
+  // service_code required for professional — AA: no CSTM-00
   if(bclass==='professional'){
-    var svcs=buildSvcs(rec,bclass);
-    if(!svcs.length)svcs=[rndSvc()];
+    var svcs=buildSvcs(rec,bclass,true);  // true = AA mode, no CSTM-00
+    if(!svcs.length)svcs=[rndSvcAA()];
     aaObj.service_code=Array.from?Array.from(new Set(svcs)):svcs.filter(function(v,i,a){return a.indexOf(v)===i;});
   }
 
