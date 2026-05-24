@@ -1440,68 +1440,8 @@ function dlFile(scope){
 
 // ── ZIP download using DeflateRaw + manual ZIP format ──
 function dlAsZip(jsonFilename, jsonStr){
-  // Pure JS PKZIP format — STORE method (no compression) — no external dependencies
-  // Works in all browsers, offline, forever — no WebAPI dependencies
+  // Pure JS PKZIP format — DEFLATE compression via native CompressionStream API
   var zipFname=jsonFilename.replace('.json','.zip');
-
-  function makeZipStore(filename, content){
-    // local file header + data + central directory + end of central dir
-    var enc=new TextEncoder();
-    var data=enc.encode(content);
-    var nameBytes=enc.encode(filename);
-    var crc=crc32(data);
-    var now=new Date();
-    var dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
-    var dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
-
-    function u16(n){var b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;}
-    function u32(n){var b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;}
-
-    // Local file header
-    var lfh=concat([
-      new Uint8Array([0x50,0x4b,0x03,0x04]), // signature
-      u16(20),    // version needed
-      u16(0),     // general purpose flag
-      u16(0),     // compression method: STORE
-      u16(dosTime),u16(dosDate),
-      u32(crc),
-      u32(data.length), // compressed size
-      u32(data.length), // uncompressed size
-      u16(nameBytes.length),
-      u16(0),     // extra field length
-      nameBytes,
-      data
-    ]);
-
-    var lfhOffset=0;
-
-    // Central directory record
-    var cdr=concat([
-      new Uint8Array([0x50,0x4b,0x01,0x02]),
-      u16(20),u16(20),
-      u16(0),u16(0),
-      u16(dosTime),u16(dosDate),
-      u32(crc),
-      u32(data.length),u32(data.length),
-      u16(nameBytes.length),
-      u16(0),u16(0),u16(0),u16(0),
-      u32(0),
-      u32(lfhOffset),
-      nameBytes
-    ]);
-
-    // End of central directory
-    var eocd=concat([
-      new Uint8Array([0x50,0x4b,0x05,0x06]),
-      u16(0),u16(0),
-      u16(1),u16(1),
-      u32(cdr.length),
-      u32(lfh.length),
-      u16(0)
-    ]);
-
-    return concat([lfh,cdr,eocd]);
-  }
 
   function concat(arrays){
     var total=arrays.reduce(function(n,a){return n+a.length;},0);
@@ -1521,12 +1461,77 @@ function dlAsZip(jsonFilename, jsonStr){
     return (crc^0xFFFFFFFF)>>>0;
   }
 
-  var zipBytes=makeZipStore(jsonFilename, jsonStr);
-  var blob=new Blob([zipBytes],{type:'application/zip'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=zipFname;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
-  var kb=Math.round(zipBytes.length/1024);
-  toast('✓ Downloaded ZIP: '+zipFname+' ('+kb+' KB)');
+  function u16(n){var b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,n,true);return b;}
+  function u32(n){var b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,n,true);return b;}
+
+  async function compressDeflate(str){
+    var enc=new TextEncoder();
+    var raw=enc.encode(str);
+    var cs=new CompressionStream('deflate-raw');
+    var writer=cs.writable.getWriter();
+    writer.write(raw);
+    writer.close();
+    var chunks=[];var reader=cs.readable.getReader();
+    while(true){var r=await reader.read();if(r.done)break;chunks.push(r.value);}
+    var total=chunks.reduce(function(n,c){return n+c.length;},0);
+    var out=new Uint8Array(total);var off=0;
+    chunks.forEach(function(c){out.set(c,off);off+=c.length;});
+    return out;
+  }
+
+  compressDeflate(jsonStr).then(function(compressed){
+    var enc=new TextEncoder();
+    var rawData=enc.encode(jsonStr);
+    var nameBytes=enc.encode(jsonFilename);
+    var crc=crc32(rawData);
+    var now=new Date();
+    var dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+    var dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+
+    // Local file header — compression method 8 = DEFLATE
+    var lfh=concat([
+      new Uint8Array([0x50,0x4b,0x03,0x04]),
+      u16(20),u16(0),
+      u16(8),                         // compression method: DEFLATE
+      u16(dosTime),u16(dosDate),
+      u32(crc),
+      u32(compressed.length),         // compressed size
+      u32(rawData.length),            // uncompressed size
+      u16(nameBytes.length),u16(0),
+      nameBytes,
+      compressed
+    ]);
+
+    // Central directory record
+    var cdr=concat([
+      new Uint8Array([0x50,0x4b,0x01,0x02]),
+      u16(20),u16(20),
+      u16(0),u16(8),                  // compression method: DEFLATE
+      u16(dosTime),u16(dosDate),
+      u32(crc),
+      u32(compressed.length),u32(rawData.length),
+      u16(nameBytes.length),
+      u16(0),u16(0),u16(0),u16(0),
+      u32(0),u32(0),
+      nameBytes
+    ]);
+
+    // End of central directory
+    var eocd=concat([
+      new Uint8Array([0x50,0x4b,0x05,0x06]),
+      u16(0),u16(0),u16(1),u16(1),
+      u32(cdr.length),u32(lfh.length),
+      u16(0)
+    ]);
+
+    var zipBytes=concat([lfh,cdr,eocd]);
+    var blob=new Blob([zipBytes],{type:'application/zip'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=zipFname;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+    var kb=Math.round(zipBytes.length/1024);
+    var origKb=Math.round(jsonStr.length/1024);
+    toast('✓ Downloaded ZIP: '+zipFname+' ('+kb+' KB compressed from '+origKb+' KB)');
+  });
 }
 
 function copyJ(scope){
