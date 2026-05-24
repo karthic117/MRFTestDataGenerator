@@ -335,7 +335,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="g3 mt">
         <div class="f"><label>Issuer name</label><input id="ih-issuer" value="karthic"/></div>
         <div class="f"><label>Plan market type</label><select id="ih-mkt"><option value="group">group</option><option value="individual" selected>individual</option></select></div>
-        <div class="f"><label>Negotiation arrangement</label><select id="ih-negarr"><option value="ffs">ffs — Fee for Service</option><option value="bundle">bundle</option><option value="capitation">capitation</option></select></div>
       </div>
     </div>
   </div>
@@ -345,7 +344,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       <div class="card-head-ico"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
       <div class="card-head-title">Provider References</div>
       <span class="card-head-tag">shared across all records</span>
-      <div class="card-head-note">provider_group_id auto-assigned 1, 2, 3&hellip;</div>
+      <div class="card-head-note">provider_group_id editable per reference</div>
     </div>
     <div class="card-body">
       <div id="inn-provs"></div>
@@ -721,6 +720,7 @@ function addTab(scope,buildFn,defaults){
   div.innerHTML='<div class="rec-body">'+buildFn(id,defaults||{})+'</div>';
   document.getElementById(scope+'-recs').appendChild(div);
   activateTab(scope,id);
+  if(scope==='inn'&&typeof refreshProvDropdowns==='function')refreshProvDropdowns();
   return id;
 }
 
@@ -788,18 +788,24 @@ function addProv(d){
   var el=document.createElement('div');
   el.className='blk';el.id='pv-'+pid;
   el.innerHTML=
-    '<div class="blk-hd"><span class="blk-pill">provider_group_id: '+n+'</span> Provider Reference #'+n+'</div>'+
+    '<div class="blk-hd"><span class="blk-pill" id="pgid-badge-'+pid+'">provider_group_id: '+n+'</span> Provider Reference #'+n+'</div>'+
     '<button class="rm" onclick="rmProv(\''+pid+'\')">✕ Remove</button>'+
     '<div class="g3">'+
+      '<div class="f"><label>provider_group_id <span class="req">*</span></label>'+
+      '<input id="pgid-'+pid+'" type="number" min="1" value="'+n+'" oninput="updatePgidBadge(\''+pid+'\')"/>'+
+      '<span class="f-hint">Any positive integer — referenced in in_network records</span></div>'+
       F('NPI(s)','pnpi-'+pid,(d&&d.npis)||'1366433195',true,'text','Comma-separated 10-digit NPIs')+
       FS('TIN type','pttype-'+pid,['ein','npi'],(d&&d.ttype)||'ein',true)+
-      F('TIN value','ptval-'+pid,(d&&d.tval)||'34-1893439',true,'text','Format: XX-XXXXXXX or XXXXXXXXX (hyphen optional per CMS schema)')+
     '</div>'+
     '<div class="g2 mt">'+
+      F('TIN value','ptval-'+pid,(d&&d.tval)||'34-1893439',true,'text','Format: XX-XXXXXXX or XXXXXXXXX (hyphen optional per CMS schema)')+
       F('Business name','pbiz-'+pid,(d&&d.biz)||'Provider Group One',false,'text','Required when TIN type = ein')+
+    '</div>'+
+    '<div class="mt">'+
       F('Network name(s)','pnet-'+pid,(d&&d.net)||'Network A',true,'text','Comma-separated')+
     '</div>';
   document.getElementById('inn-provs').appendChild(el);
+  refreshProvDropdowns();
 }
 
 function rmProv(pid){
@@ -808,9 +814,35 @@ function rmProv(pid){
   var el=document.getElementById('pv-'+pid);if(el)el.remove();
   document.getElementById('inn-provs').querySelectorAll('.blk').forEach(function(b,i){
     var badge=b.querySelector('.blk-pill');
-    if(badge)badge.textContent='provider_group_id: '+(i+1);
+    var pgidEl=b.querySelector('[id^="pgid-"]');
+    var pgidVal=pgidEl?pgidEl.value:(i+1);
+    if(badge)badge.textContent='provider_group_id: '+pgidVal;
     var t=b.querySelector('.blk-hd');
     if(t){var old=t.innerHTML;t.innerHTML=old.replace(/Provider Reference #\d+/,'Provider Reference #'+(i+1));}
+  });
+  refreshProvDropdowns();
+}
+
+function updatePgidBadge(pid){
+  var val=gv('pgid-'+pid)||'?';
+  var badge=document.getElementById('pgid-badge-'+pid);
+  if(badge)badge.textContent='provider_group_id: '+val;
+  refreshProvDropdowns();
+}
+
+function refreshProvDropdowns(){
+  // rebuild all pr-* selects in inn records to reflect current pgid values
+  var pgids=PROVS.map(function(pid,i){return String(gv('pgid-'+pid)||(i+1));});
+  RS.inn.forEach(function(rid){
+    var sel=document.getElementById('pr-'+rid);
+    if(!sel)return;
+    var cur=sel.value;
+    // if current selection is no longer valid, reset to first provider
+    if(pgids.length&&pgids.indexOf(cur)===-1)cur=pgids[0];
+    var html=pgids.length
+      ?pgids.map(function(pgid,i){return '<option value="'+pgid+'"'+(pgid===cur?' selected':'')+'>Provider ref '+(i+1)+' (id: '+pgid+')</option>';}).join('')
+      :'<option value="">— no providers defined —</option>';
+    sel.innerHTML=html;
   });
 }
 
@@ -838,7 +870,10 @@ function getProvRefs(errFn){
     if(!nets.length){if(errFn)errFn(lbl+'Network name is required.');return null;}
     var tin={type:ttype,value:tval};
     if(ttype==='ein')tin.business_name=biz;
-    refs.push({provider_group_id:i+1,network_name:nets,provider_groups:[{npi:npiNums,tin:tin}]});
+    var pgidRaw=gv('pgid-'+pid);
+    var pgid=parseInt(pgidRaw);
+    if(isNaN(pgid)||pgid<1){if(errFn)errFn(lbl+'provider_group_id must be a positive integer.');return null;}
+    refs.push({provider_group_id:pgid,network_name:nets,provider_groups:[{npi:npiNums,tin:tin}]});
   }
   return refs;
 }
@@ -849,9 +884,11 @@ function buildINN(id,d){
   var bclass=d.bclass||'institutional';
   var isDrg=DRG.indexOf(ctype)!==-1;
   var isPro=(bclass==='professional'||bclass==='both');
-  var provOpts=PROVS.length
-    ?PROVS.map(function(pid,i){return '<option value="'+(i+1)+'"'+(String(i+1)===String(d.pref||'1')?' selected':'')+'>Provider ref '+(i+1)+'</option>';}).join('')
-    :'<option value="1">Provider ref 1</option>';
+  var _pgids=PROVS.map(function(pid,i){return String(gv('pgid-'+pid)||(i+1));});
+  var _defPref=d.pref!=null?String(d.pref):(_pgids.length?_pgids[0]:'');
+  var provOpts=_pgids.length
+    ?_pgids.map(function(pgid,i){return '<option value="'+pgid+'"'+(pgid===_defPref?' selected':'')+'>Provider ref '+(i+1)+' (id: '+pgid+')</option>';}).join('')
+    :'<option value="">— add a provider reference above —</option>';
 
   return '<div class="sec-label">Billing code</div>'+
     '<div class="g5">'+
@@ -958,7 +995,13 @@ function genINN(){
       svcs=_svcs2;
     }
     var mods=gv('nmod-'+rid).split(',').map(function(s){return s.trim();}).filter(Boolean);
-    var pref=parseInt(gv('pr-'+rid)||'1');
+    var prefRaw=gv('pr-'+rid);
+    if(!prefRaw){showErr('inn',R+'Provider reference is required — select one from the dropdown.');return;}
+    var pref=parseInt(prefRaw);
+    if(isNaN(pref)){showErr('inn',R+'Provider reference value is invalid.');return;}
+    // cross-check: selected provider_group_id must exist in provRefs
+    var validPgids=provRefs.map(function(r){return r.provider_group_id;});
+    if(validPgids.indexOf(pref)===-1){showErr('inn',R+'Provider reference id '+pref+' does not match any provider_group_id ('+validPgids.join(', ')+').');return;}
     var price={negotiated_type:gv('nt-'+rid)||'negotiated',negotiated_rate:parseFloat(rate.toFixed(2)),expiration_date:gv('ne-'+rid)||'9999-12-31',billing_class:bclass,setting:setting};
     if(svcs.length)price.service_code=svcs;
     if(mods.length)price.billing_code_modifier=mods;
@@ -1015,7 +1058,10 @@ function buildAA(id,d){
     '</div></div>'+
 
     '<div class="sec-label">Payment &amp; providers</div>'+
-    F('Allowed amount ($)','aamt-'+id,d.amt||'150.00',true,'text','Dollar amount — e.g. 150.00')+
+    '<div class="g2">'+
+      F('Allowed amount ($)','aamt-'+id,d.amt||'150.00',true,'text','Dollar amount — e.g. 150.00')+
+      F('Modifier(s)','amod-'+id,d.mod||'',false,'text','Optional, comma-separated billing code modifiers')+
+    '</div>'+
     '<div style="margin-top:12px;font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">Providers <span style="font-size:11px;color:var(--txt3);font-weight:400">— NPI array + billed charge</span></div>'+
     '<div id="aprovs-'+id+'"></div>'+
     '<button class="add-sub" style="margin-top:4px" onclick="addAAP(\''+id+'\')">＋ Add Provider</button>';
