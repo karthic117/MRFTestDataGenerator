@@ -643,6 +643,19 @@ function validateSvcs(raw,label,errFn){
   }
   return valid;
 }
+function validateSvcsAA(raw,label,errFn){
+  if(!raw||!raw.trim())return[];
+  var parts=raw.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var valid=[];
+  for(var i=0;i<parts.length;i++){
+    if(!isValidSvcAA(parts[i])){
+      if(errFn)errFn(label+'Service code "'+parts[i]+'" is invalid for Allowed Amounts. Must be a 2-digit number 10-99 (e.g. 11, 22). CSTM-00 is not allowed in Allowed Amounts.');
+      return null;
+    }
+    valid.push(parts[i]);
+  }
+  return valid;
+}
 function parseNPIs(raw){return raw.split(',').map(function(s){return s.trim();}).filter(Boolean);}
 
 function toast(msg){
@@ -1115,7 +1128,7 @@ function genAA(){
     var svcRaw=gv('asvc-'+rid);
     var svcs=[];
     if(svcRaw){
-      var _asvcs=validateSvcs(svcRaw,R,function(m){showErr('aa',m);});
+      var _asvcs=validateSvcsAA(svcRaw,R,function(m){showErr('aa',m);});
       if(_asvcs===null)return;
       svcs=_asvcs;
     }
@@ -1126,7 +1139,7 @@ function genAA(){
     if(!tval){showErr('aa',R+'TIN value is required.');return;}
     if(ttype==='npi'&&!isNPI(tval)){showErr('aa',R+'TIN type is "npi" — TIN value must be a valid 10-digit NPI.');return;}
     if(ttype==='ein'&&!/^\d{2}-?\d{7}$/.test(tval)){showErr('aa',R+'TIN value "'+tval+'" is not a valid EIN. Use format XX-XXXXXXX or XXXXXXXXX (e.g. 34-1893439 or 341893439).');return;}
-    if(bclass==='professional'&&!svcs.length){showErr('aa',R+'Service code(s) required when billing class is "professional". Enter 2-digit codes (10-99) or CSTM-00.');return;}
+    if(bclass==='professional'&&!svcs.length){showErr('aa',R+'Service code(s) required when billing class is "professional". Enter 2-digit codes 10-99 (e.g. 11, 22). Note: CSTM-00 is not allowed in Allowed Amounts.');return;}
 
     // providers
     var provCont=document.getElementById('aprovs-'+rid);
@@ -1728,9 +1741,18 @@ function runValidation(scope, data){
               ['type','value'].forEach(function(f){if(pg.tin[f]===undefined)fail(tp+'.'+f,'MISSING — required');});
               chkEnum(pg.tin,'type',tp,TIN_TYPE_ENUM);
               chkString(pg.tin,'value',tp,1);
-              // tin value pattern
-              if(pg.tin.value&&!EIN_PATTERN.test(pg.tin.value)){fail(tp+'.value — pattern','Value "'+pg.tin.value+'" does not match \\d{2}-?\\d{7}');}
-              else if(pg.tin.value)ok(tp+'.value — pattern','"'+pg.tin.value+'"');
+              // tin value pattern — check based on tin.type
+              if(pg.tin.value){
+                if(pg.tin.type==='ein'){
+                  if(!EIN_PATTERN.test(pg.tin.value)){fail(tp+'.value — pattern','Value "'+pg.tin.value+'" does not match \\d{2}-?\\d{7}');}
+                  else ok(tp+'.value — pattern','"'+pg.tin.value+'"');
+                } else if(pg.tin.type==='npi'){
+                  if(!/^[1-9]\d{9}$/.test(pg.tin.value)){fail(tp+'.value — pattern','Value "'+pg.tin.value+'" does not match 10-digit NPI pattern');}
+                  else ok(tp+'.value — pattern','"'+pg.tin.value+'"');
+                } else {
+                  ok(tp+'.value — pattern','"'+pg.tin.value+'"');
+                }
+              }
               // anyOf: ein requires business_name
               if(pg.tin.type==='ein'){
                 if(!pg.tin.business_name){fail(tp+'.business_name','MISSING — required when tin.type is "ein"');}
@@ -1894,13 +1916,20 @@ function runValidation(scope, data){
             // tin
             if(aa.tin){
               var tp=ap+'.tin';
-              ['type','value'].forEach(function(f){if(!aa.tin[f])fail(tp+'.'+f,'MISSING — required');});
+              ['type','value'].forEach(function(f){if(aa.tin[f]===undefined)fail(tp+'.'+f,'MISSING — required');});
               chkEnum(aa.tin,'type',tp,TIN_TYPE_ENUM);
               chkString(aa.tin,'value',tp,1);
-              // EIN pattern check (same as INN schema)
-              if(aa.tin.type==='ein'&&aa.tin.value){
-                if(!EIN_PATTERN.test(aa.tin.value))fail(tp+'.value — pattern','Value "'+aa.tin.value+'" does not match \d{2}-?\d{7}');
-                else ok(tp+'.value — pattern','"'+aa.tin.value+'"');
+              // tin value pattern — check based on tin.type
+              if(aa.tin.value){
+                if(aa.tin.type==='ein'){
+                  if(!EIN_PATTERN.test(aa.tin.value))fail(tp+'.value — pattern','Value "'+aa.tin.value+'" does not match \\d{2}-?\\d{7}');
+                  else ok(tp+'.value — pattern','"'+aa.tin.value+'"');
+                } else if(aa.tin.type==='npi'){
+                  if(!/^[1-9]\d{9}$/.test(aa.tin.value))fail(tp+'.value — pattern','Value "'+aa.tin.value+'" does not match 10-digit NPI pattern');
+                  else ok(tp+'.value — pattern','"'+aa.tin.value+'"');
+                } else {
+                  ok(tp+'.value — pattern','"'+aa.tin.value+'"');
+                }
               }
             }
             // payments
